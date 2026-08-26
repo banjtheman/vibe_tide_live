@@ -2,6 +2,13 @@ import type { BackgroundId } from "./backgrounds";
 
 export const LEVEL_SCHEMA_VERSION = 1 as const;
 
+export const LEVEL_SIZE_LIMITS = Object.freeze({
+  minWidth: 20,
+  maxWidth: 80,
+  minHeight: 10,
+  maxHeight: 32,
+});
+
 export const TILE_IDS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 export type TileId = (typeof TILE_IDS)[number];
 
@@ -211,6 +218,7 @@ export interface StudioStore {
   getSnapshot(): StudioSnapshot;
   subscribe(listener: (snapshot: StudioSnapshot) => void): () => void;
   createLevel(blueprint: LevelBlueprint, source?: "human" | "agent"): MutationResult;
+  resizeLevel(width: number, height: number, source?: "human" | "agent"): MutationResult;
   applyPatch(
     operations: LevelPatchOperation[],
     reason: string,

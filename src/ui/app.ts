@@ -1,6 +1,7 @@
 import {
   TILE_DEFINITIONS,
   TILE_IDS,
+  LEVEL_SIZE_LIMITS,
   type LevelDocument,
   type StudioSnapshot,
   type StudioStore,
@@ -172,6 +173,30 @@ export function mountStudioUI(
                 </select>
               </label>
             </div>
+            <form class="level-size" data-size-form>
+              <fieldset>
+                <legend class="field-label">Course size</legend>
+                <p class="level-size__intro">Make a quick dash or a longer adventure.</p>
+                <div class="level-size__presets" role="group" aria-label="Quick course lengths">
+                  <button type="button" data-size-preset="28" aria-pressed="false" aria-label="Short, 28 tiles long"><span>Short</span><small>28</small></button>
+                  <button type="button" data-size-preset="48" aria-pressed="true" aria-label="Classic, 48 tiles long"><span>Classic</span><small>48</small></button>
+                  <button type="button" data-size-preset="72" aria-pressed="false" aria-label="Long, 72 tiles long"><span>Long</span><small>72</small></button>
+                </div>
+                <div class="level-size__fields">
+                  <label class="field">
+                    <span class="field-label">Length</span>
+                    <input data-field="width" type="number" min="${LEVEL_SIZE_LIMITS.minWidth}" max="${LEVEL_SIZE_LIMITS.maxWidth}" step="1" inputmode="numeric" aria-describedby="level-size-help" required />
+                  </label>
+                  <label class="field">
+                    <span class="field-label">Height</span>
+                    <input data-field="height" type="number" min="${LEVEL_SIZE_LIMITS.minHeight}" max="${LEVEL_SIZE_LIMITS.maxHeight}" step="1" inputmode="numeric" aria-describedby="level-size-help" required />
+                  </label>
+                </div>
+                <p class="level-size__help" id="level-size-help">${LEVEL_SIZE_LIMITS.minWidth}–${LEVEL_SIZE_LIMITS.maxWidth} tiles long · ${LEVEL_SIZE_LIMITS.minHeight}–${LEVEL_SIZE_LIMITS.maxHeight} tiles tall</p>
+                <p class="level-size__warning" data-size-warning aria-live="polite"></p>
+                <button class="button button--sea button--wide" data-size-submit type="submit">Resize level</button>
+              </fieldset>
+            </form>
             <fieldset class="background-fieldset">
               <legend class="field-label">Backdrop</legend>
               <div class="background-picker" role="radiogroup" aria-label="Level backdrop">
@@ -310,6 +335,12 @@ export function mountStudioUI(
   const descriptionInput = requireElement<HTMLTextAreaElement>(root, '[data-field="description"]');
   const difficultyInput = requireElement<HTMLSelectElement>(root, '[data-field="difficulty"]');
   const mechanicInput = requireElement<HTMLSelectElement>(root, '[data-field="primaryMechanic"]');
+  const sizeForm = requireElement<HTMLFormElement>(root, "[data-size-form]");
+  const widthInput = requireElement<HTMLInputElement>(root, '[data-field="width"]');
+  const heightInput = requireElement<HTMLInputElement>(root, '[data-field="height"]');
+  const sizePresetButtons = [...root.querySelectorAll<HTMLButtonElement>("[data-size-preset]")];
+  const sizeWarning = requireElement<HTMLElement>(root, "[data-size-warning]");
+  const sizeSubmit = requireElement<HTMLButtonElement>(root, "[data-size-submit]");
   const backgroundButtons = [...root.querySelectorAll<HTMLButtonElement>("[data-background]")];
   const modeButtons = [...root.querySelectorAll<HTMLButtonElement>("[data-mode]")];
   const paletteButtons = [...root.querySelectorAll<HTMLButtonElement>("[data-brush]")];
@@ -386,6 +417,31 @@ export function mountStudioUI(
     if (document.activeElement !== field && field.value !== value) field.value = value;
   };
 
+  const updateSizeControls = (): void => {
+    const { width: currentWidth, height: currentHeight } = store.getSnapshot().level;
+    const requestedWidth = Number(widthInput.value);
+    const requestedHeight = Number(heightInput.value);
+    const dimensionsAreValid = widthInput.validity.valid && heightInput.validity.valid;
+    const isUnchanged = requestedWidth === currentWidth && requestedHeight === currentHeight;
+    const trimsRight = dimensionsAreValid && requestedWidth < currentWidth;
+    const trimsSky = dimensionsAreValid && requestedHeight < currentHeight;
+
+    sizePresetButtons.forEach((button) => {
+      button.setAttribute("aria-pressed", String(Number(button.dataset.sizePreset) === requestedWidth));
+    });
+    sizeSubmit.disabled = !dimensionsAreValid || isUnchanged;
+    sizeSubmit.textContent = trimsRight || trimsSky ? "Trim & resize" : "Resize level";
+    if (trimsRight && trimsSky) {
+      sizeWarning.textContent = "This trims the far right and top. Undo restores every removed piece.";
+    } else if (trimsRight) {
+      sizeWarning.textContent = "This trims the far right. Undo restores every removed piece.";
+    } else if (trimsSky) {
+      sizeWarning.textContent = "This trims space from the top. Undo restores every removed piece.";
+    } else {
+      sizeWarning.textContent = "The start and seafloor stay in place.";
+    }
+  };
+
   const render = (snapshot: StudioSnapshot): void => {
     const { level, validation } = snapshot;
     if (renderedRevision !== level.revision) {
@@ -417,6 +473,9 @@ export function mountStudioUI(
     syncField(descriptionInput, level.metadata.description);
     syncField(difficultyInput, level.metadata.difficulty);
     syncField(mechanicInput, level.metadata.primaryMechanic);
+    syncField(widthInput, String(level.width));
+    syncField(heightInput, String(level.height));
+    updateSizeControls();
     backgroundButtons.forEach((button) => {
       const selected = button.dataset.background === background.id;
       button.setAttribute("aria-checked", String(selected));
@@ -487,6 +546,20 @@ export function mountStudioUI(
   mechanicInput.addEventListener("change", () => {
     store.setMetadata({ primaryMechanic: mechanicInput.value as "platforming" | "ice" | "spikes" | "water" | "mixed" }, "human");
   });
+  widthInput.addEventListener("input", updateSizeControls);
+  heightInput.addEventListener("input", updateSizeControls);
+  sizePresetButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      widthInput.value = button.dataset.sizePreset ?? String(store.getSnapshot().level.width);
+      updateSizeControls();
+    });
+  });
+  sizeForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!sizeForm.reportValidity()) return;
+    const result = store.resizeLevel(Number(widthInput.value), Number(heightInput.value), "human");
+    showToast(result.ok ? `${result.summary} — Undo is available.` : result.summary);
+  });
   backgroundButtons.forEach((button) => {
     button.addEventListener("click", () => {
       const background = button.dataset.background;
@@ -514,7 +587,10 @@ export function mountStudioUI(
   });
 
   requireElement<HTMLButtonElement>(root, '[data-action="fresh"]').addEventListener("click", () => {
-    const current = store.getSnapshot().level.metadata;
+    const currentLevel = store.getSnapshot().level;
+    const current = currentLevel.metadata;
+    const requestedWidth = widthInput.validity.valid ? Number(widthInput.value) : currentLevel.width;
+    const requestedHeight = heightInput.validity.valid ? Number(heightInput.value) : currentLevel.height;
     store.createLevel(
       {
         name: nameInput.value.trim() || current.name,
@@ -522,6 +598,8 @@ export function mountStudioUI(
         difficulty: difficultyInput.value as "beginner" | "moderate" | "tricky",
         primaryMechanic: mechanicInput.value as "platforming" | "ice" | "spikes" | "water" | "mixed",
         background: store.getSnapshot().level.metadata.background,
+        width: requestedWidth,
+        height: requestedHeight,
         seed: Date.now() >>> 0,
       },
       "human",

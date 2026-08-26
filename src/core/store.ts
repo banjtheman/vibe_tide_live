@@ -18,10 +18,11 @@ import {
   type StudioSnapshot,
   type StudioStore,
   type TileId,
+  LEVEL_SIZE_LIMITS,
 } from "./contracts";
 import { decodeLevel, encodeLevel } from "./codec";
 import { generateLevel } from "./generator";
-import { isTileId, repairLevel, validateLevel } from "./validation";
+import { isPassableTile, isSupportTile, isTileId, repairLevel, validateLevel } from "./validation";
 
 export const DEFAULT_STORAGE_KEY = "vibe-tide-live:studio:v1";
 export const DEFAULT_HISTORY_LIMIT = 32;
@@ -342,6 +343,63 @@ function publicBounds(bounds: MutableBounds | null): MutationResult["changedBoun
     : null;
 }
 
+function findGoal(level: LevelDocument): GridPoint | null {
+  for (let y = 0; y < level.height; y += 1) {
+    for (let x = 0; x < level.width; x += 1) {
+      if (level.tiles[y]?.[x] === 3) {
+        return { x, y };
+      }
+    }
+  }
+  return null;
+}
+
+function clearGoals(tiles: TileId[][]): void {
+  for (const row of tiles) {
+    for (let x = 0; x < row.length; x += 1) {
+      if (row[x] === 3) {
+        row[x] = 0;
+      }
+    }
+  }
+}
+
+function relocateGoalToReachableLanding(level: LevelDocument, preferredY: number): void {
+  clearGoals(level.tiles);
+  const candidates: GridPoint[] = [];
+  for (let y = 0; y < level.height - 1; y += 1) {
+    for (let x = 1; x < level.width; x += 1) {
+      const tile = level.tiles[y]?.[x];
+      const support = level.tiles[y + 1]?.[x];
+      if (tile !== undefined && support !== undefined && isPassableTile(tile) && isSupportTile(support)) {
+        candidates.push({ x, y });
+      }
+    }
+  }
+  candidates.sort(
+    (left, right) =>
+      right.x - left.x || Math.abs(left.y - preferredY) - Math.abs(right.y - preferredY),
+  );
+
+  for (const candidate of candidates) {
+    const previous = level.tiles[candidate.y]![candidate.x]!;
+    level.tiles[candidate.y]![candidate.x] = 3;
+    if (validateLevel(level).valid) {
+      return;
+    }
+    level.tiles[candidate.y]![candidate.x] = previous;
+  }
+
+  const fallback = candidates[0] ?? {
+    x: Math.max(1, level.width - 2),
+    y: Math.max(1, level.height - 3),
+  };
+  level.tiles[fallback.y]![fallback.x] = 3;
+  if (fallback.y + 1 < level.height) {
+    level.tiles[fallback.y + 1]![fallback.x] = 1;
+  }
+}
+
 export class LevelStore implements StudioStore {
   private level: LevelDocument;
   private mode: StudioMode = "edit";
@@ -440,6 +498,101 @@ export class LevelStore implements StudioStore {
       revision: next.revision,
       summary: `Created ${next.metadata.name}`,
       changedBounds: { x: 0, y: 0, width: next.width, height: next.height },
+      validation: this.validation,
+    };
+  }
+
+  resizeLevel(
+    width: number,
+    height: number,
+    source: "human" | "agent" = "human",
+  ): MutationResult {
+    if (
+      !Number.isInteger(width) ||
+      width < LEVEL_SIZE_LIMITS.minWidth ||
+      width > LEVEL_SIZE_LIMITS.maxWidth
+    ) {
+      return this.noChange(
+        `Level length must be a whole number from ${LEVEL_SIZE_LIMITS.minWidth} to ${LEVEL_SIZE_LIMITS.maxWidth}.`,
+        false,
+      );
+    }
+    if (
+      !Number.isInteger(height) ||
+      height < LEVEL_SIZE_LIMITS.minHeight ||
+      height > LEVEL_SIZE_LIMITS.maxHeight
+    ) {
+      return this.noChange(
+        `Level height must be a whole number from ${LEVEL_SIZE_LIMITS.minHeight} to ${LEVEL_SIZE_LIMITS.maxHeight}.`,
+        false,
+      );
+    }
+    if (width === this.level.width && height === this.level.height) {
+      return this.noChange("Level size already matches.", true);
+    }
+
+    const previousWidth = this.level.width;
+    const previousHeight = this.level.height;
+    const previousGoal = findGoal(this.level);
+    const verticalOffset = height - previousHeight;
+    const tiles: TileId[][] = Array.from({ length: height }, (_, newY) => {
+      const previousY = newY - verticalOffset;
+      return Array.from({ length: width }, (_, x) => {
+        if (previousY < 0 || previousY >= previousHeight || x >= previousWidth) {
+          return 0;
+        }
+        return this.level.tiles[previousY]?.[x] ?? 0;
+      });
+    });
+    const next: LevelDocument = {
+      ...this.level,
+      width,
+      height,
+      tiles,
+      metadata: {
+        ...this.level.metadata,
+        author: mergeAuthor(this.level.metadata.author, source),
+      },
+    };
+
+    const transformedGoalY = previousGoal ? previousGoal.y + verticalOffset : height - 3;
+    const finishWasPinnedToRightEdge =
+      previousGoal !== null && previousGoal.x >= previousWidth - 2;
+    const canExtendPinnedFinish =
+      finishWasPinnedToRightEdge &&
+      width > previousWidth &&
+      transformedGoalY >= 1 &&
+      transformedGoalY < height - 1;
+
+    if (canExtendPinnedFinish) {
+      clearGoals(next.tiles);
+      const supportAtOldFinish = next.tiles[transformedGoalY + 1]?.[previousGoal.x];
+      const supportTile =
+        supportAtOldFinish !== undefined && isSupportTile(supportAtOldFinish)
+          ? supportAtOldFinish
+          : 1;
+      for (let x = previousGoal.x; x < width; x += 1) {
+        next.tiles[transformedGoalY]![x] = 0;
+        next.tiles[transformedGoalY + 1]![x] = supportTile;
+        if (transformedGoalY > 0) {
+          next.tiles[transformedGoalY - 1]![x] = 0;
+        }
+      }
+      next.tiles[transformedGoalY]![width - 2] = 3;
+    } else if (findGoal(next) === null) {
+      relocateGoalToReachableLanding(
+        next,
+        Math.max(0, Math.min(height - 2, transformedGoalY)),
+      );
+    }
+
+    const detail = `${previousWidth} × ${previousHeight} → ${width} × ${height}`;
+    this.commitLevel(next, source, "Resized level", detail);
+    return {
+      ok: true,
+      revision: this.level.revision,
+      summary: `Resized level to ${width} × ${height}`,
+      changedBounds: { x: 0, y: 0, width, height },
       validation: this.validation,
     };
   }

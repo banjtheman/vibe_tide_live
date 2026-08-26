@@ -80,6 +80,7 @@ class StoreDouble implements StudioStore {
   };
 
   lastBlueprint: LevelBlueprint | null = null;
+  lastResize: { width: number; height: number } | null = null;
   lastPatch: { operations: LevelPatchOperation[]; reason: string } | null = null;
   lastMetadata: Partial<LevelMetadata> | null = null;
   lastBackground: BackgroundId | null = null;
@@ -97,6 +98,16 @@ class StoreDouble implements StudioStore {
     this.lastBlueprint = blueprint;
     this.lastSource = source;
     return this.result("blueprint accepted");
+  }
+
+  resizeLevel(
+    width: number,
+    height: number,
+    source: "human" | "agent" = "human",
+  ): MutationResult {
+    this.lastResize = { width, height };
+    this.lastSource = source;
+    return this.result("resize accepted");
   }
 
   applyPatch(
@@ -192,7 +203,7 @@ describe("registerVibeTideTools", () => {
     Reflect.deleteProperty(globalThis, "document");
   });
 
-  it("registers the ten standard tools and unregisters all of them via AbortSignal", async () => {
+  it("registers the eleven standard tools and unregisters all of them via AbortSignal", async () => {
     const modelContext = new InMemoryModelContext();
     installModelContext(modelContext);
 
@@ -205,6 +216,7 @@ describe("registerVibeTideTools", () => {
     expect(modelContext.tools.get("validate_level")?.annotations?.readOnlyHint).toBe(true);
     expect(modelContext.tools.get("get_playtest_report")?.annotations?.readOnlyHint).toBe(true);
     expect(modelContext.tools.get("apply_level_patch")?.annotations?.readOnlyHint).toBe(false);
+    expect(modelContext.tools.get("resize_level")?.annotations?.readOnlyHint).toBe(false);
     expect(modelContext.tools.get("create_share_link")?.annotations?.readOnlyHint).toBe(false);
 
     registration.unregister();
@@ -284,6 +296,39 @@ describe("registerVibeTideTools", () => {
     await expect(
       modelContext.invoke("create_level_from_blueprint", { name: "Too wide", width: 81 }),
     ).rejects.toThrow("width must be an integer from 20 to 80");
+  });
+
+  it("resizes one or both dimensions through a bounded mutating tool", async () => {
+    const store = new StoreDouble();
+    store.snapshot = {
+      ...store.snapshot,
+      level: { ...store.snapshot.level, width: 20, height: 10 },
+    };
+    const modelContext = new InMemoryModelContext();
+    installModelContext(modelContext);
+    await registerVibeTideTools(store);
+
+    const output = await modelContext.invoke("resize_level", { width: 36, height: 18 });
+
+    expect(store.lastResize).toEqual({ width: 36, height: 18 });
+    expect(store.lastSource).toBe("agent");
+    expect(output).toContain("Resized level");
+
+    await modelContext.invoke("resize_level", { width: 28 });
+    expect(store.lastResize).toEqual({ width: 28, height: 10 });
+
+    await expect(modelContext.invoke("resize_level", {})).rejects.toThrow(
+      "provide width, height, or both",
+    );
+    await expect(modelContext.invoke("resize_level", { width: 19 })).rejects.toThrow(
+      "width must be an integer from 20 to 80",
+    );
+    await expect(modelContext.invoke("resize_level", { width: undefined })).rejects.toThrow(
+      "width must be an integer from 20 to 80",
+    );
+    await expect(modelContext.invoke("resize_level", { height: 18, anchor: "center" })).rejects.toThrow(
+      "unexpected field",
+    );
   });
 
   it("validates patch bounds and sends one atomic operation batch", async () => {

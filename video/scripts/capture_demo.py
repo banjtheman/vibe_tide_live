@@ -114,7 +114,7 @@ def invoke(page: Page, name: str, payload: dict[str, Any] | None = None) -> str:
 
 def wait_until_ready(page: Page) -> None:
     page.goto(BASE_URL, wait_until="networkidle")
-    page.wait_for_function("Object.keys(window.__vtTools || {}).length === 10")
+    page.wait_for_function("Object.keys(window.__vtTools || {}).length === 11")
     page.wait_for_selector("[data-stage]")
     page.wait_for_selector("canvas", state="attached")
     page.wait_for_timeout(900)

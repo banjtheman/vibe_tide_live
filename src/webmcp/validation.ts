@@ -1,5 +1,6 @@
 import {
   TILE_IDS,
+  LEVEL_SIZE_LIMITS,
   type Difficulty,
   type LevelBlueprint,
   type LevelPatchOperation,
@@ -20,6 +21,11 @@ export interface MetadataInput {
   description?: string;
   difficulty?: Difficulty;
   primaryMechanic?: PrimaryMechanic;
+}
+
+export interface ResizeLevelInput {
+  width?: number;
+  height?: number;
 }
 export class WebMCPInputError extends Error {
   constructor(toolName: string, detail: string) {
@@ -128,11 +134,23 @@ export function parseBlueprint(input: unknown): LevelBlueprint {
   if (value.description !== undefined) {
     blueprint.description = stringValue(value.description, "description", toolName, 0, 240);
   }
-  if (value.width !== undefined) {
-    blueprint.width = integerValue(value.width, "width", toolName, 20, 80);
+  if ("width" in value) {
+    blueprint.width = integerValue(
+      value.width,
+      "width",
+      toolName,
+      LEVEL_SIZE_LIMITS.minWidth,
+      LEVEL_SIZE_LIMITS.maxWidth,
+    );
   }
-  if (value.height !== undefined) {
-    blueprint.height = integerValue(value.height, "height", toolName, 10, 32);
+  if ("height" in value) {
+    blueprint.height = integerValue(
+      value.height,
+      "height",
+      toolName,
+      LEVEL_SIZE_LIMITS.minHeight,
+      LEVEL_SIZE_LIMITS.maxHeight,
+    );
   }
   if (value.difficulty !== undefined) {
     blueprint.difficulty = enumValue(value.difficulty, "difficulty", toolName, DIFFICULTIES);
@@ -164,6 +182,35 @@ export function parseBlueprint(input: unknown): LevelBlueprint {
   }
 
   return blueprint;
+}
+
+export function parseResizeLevel(input: unknown): ResizeLevelInput {
+  const toolName = "resize_level";
+  const value = record(input, toolName);
+  exactKeys(value, ["width", "height"], toolName);
+  if (Object.keys(value).length === 0) {
+    throw new WebMCPInputError(toolName, "provide width, height, or both");
+  }
+  const dimensions: ResizeLevelInput = {};
+  if ("width" in value) {
+    dimensions.width = integerValue(
+      value.width,
+      "width",
+      toolName,
+      LEVEL_SIZE_LIMITS.minWidth,
+      LEVEL_SIZE_LIMITS.maxWidth,
+    );
+  }
+  if ("height" in value) {
+    dimensions.height = integerValue(
+      value.height,
+      "height",
+      toolName,
+      LEVEL_SIZE_LIMITS.minHeight,
+      LEVEL_SIZE_LIMITS.maxHeight,
+    );
+  }
+  return dimensions;
 }
 
 function parseSection(input: unknown, index: number, toolName: string): LevelSectionSpec {

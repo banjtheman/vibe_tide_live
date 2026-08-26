@@ -14,6 +14,8 @@ The app treats execution options defensively because early host implementations 
 
 `create_share_link` returns the same self-contained `vt2.` level URL as the human Share action. Current links include `mode=play`, so recipients land directly in the Phaser playtest; legacy `vt1.` links remain readable and older links without a mode continue to open in the builder.
 
+`resize_level` accepts `width`, `height`, or both within the same `20–80 × 10–32` bounds as blueprint creation. It anchors the left edge and seafloor, so growth adds space on the right or above and shrinking trims the far right or sky. A generated finish pinned to the right edge follows a longer course with a safe runway; if shrinking removes a finish, the store relocates it to the farthest reachable landing it can preserve. The entire resize is one revision and one undo step.
+
 `set_level_background` changes only the level’s visual scene. The ten accepted IDs are `golden-coast`, `neon-moonwave`, `bioluminescent-grotto`, `stormglass-reef`, `moonlit-lagoon`, `aurora-current`, `sunken-temple`, `kelp-cathedral`, `starlight-tidepool`, and `festival-shore`. Blueprint creation accepts the same optional `background` field, and the compact share codec preserves it.
 
 ## Design rules

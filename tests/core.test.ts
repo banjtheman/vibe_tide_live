@@ -366,6 +366,75 @@ describe("LevelStore transactions, history, and persistence", () => {
     expect(store.getSnapshot().canUndo).toBe(false);
   });
 
+  it("grows from the right and top while keeping the seafloor anchored", () => {
+    const initial = generateLevel(
+      { name: "Grow", width: 32, height: 14, seed: 7 },
+      { author: "human" },
+    );
+    const initialReport = validateLevel(initial);
+    const oldGoal = initialReport.goal!;
+    const marker = initial.tiles[2]![5]!;
+    const store = new LevelStore({ initialLevel: initial, storage: null, now: tickingClock() });
+
+    const result = store.resizeLevel(40, 18, "agent");
+    const grown = store.getSnapshot().level;
+    const grownReport = store.getSnapshot().validation;
+
+    expect(result.ok).toBe(true);
+    expect(result.changedBounds).toEqual({ x: 0, y: 0, width: 40, height: 18 });
+    expect(grown.width).toBe(40);
+    expect(grown.height).toBe(18);
+    expect(grown.tiles[6]![5]).toBe(marker);
+    expect(grownReport.goal).toEqual({ x: 38, y: oldGoal.y + 4 });
+    expect(grownReport.valid).toBe(true);
+    expect(grown.metadata.author).toBe("human+agent");
+    expect(store.getSnapshot().activity[0]).toMatchObject({
+      action: "Resized level",
+      detail: "32 × 14 → 40 × 18",
+    });
+  });
+
+  it("shrinks from the far right and sky, rescues a cropped finish, and undoes exactly", () => {
+    const store = new LevelStore({
+      initialLevel: generateLevel({ name: "Trim", width: 48, height: 18, seed: 11 }),
+      storage: null,
+      now: tickingClock(),
+    });
+    const before = store.exportProject();
+
+    const result = store.resizeLevel(28, 14);
+    const trimmed = store.getSnapshot();
+
+    expect(result.ok).toBe(true);
+    expect(trimmed.level.tiles).toHaveLength(14);
+    expect(trimmed.level.tiles.every((row) => row.length === 28)).toBe(true);
+    expect(trimmed.validation.goal?.x).toBeLessThan(28);
+    expect(trimmed.validation.valid).toBe(true);
+    expect(trimmed.level.tiles[13]![0]).toBe(before.tiles[17]![0]);
+
+    expect(store.undo().ok).toBe(true);
+    const restored = store.getSnapshot().level;
+    expect(restored.width).toBe(before.width);
+    expect(restored.height).toBe(before.height);
+    expect(restored.tiles).toEqual(before.tiles);
+  });
+
+  it("rejects invalid dimensions atomically and treats identical dimensions as a no-op", () => {
+    const store = new LevelStore({ storage: null, now: tickingClock() });
+    const before = store.exportProject();
+
+    expect(store.resizeLevel(19, before.height).ok).toBe(false);
+    expect(store.resizeLevel(before.width, 33).ok).toBe(false);
+    expect(store.resizeLevel(32.5, 18).ok).toBe(false);
+    expect(store.exportProject()).toEqual(before);
+    expect(store.getSnapshot().canUndo).toBe(false);
+
+    const unchanged = store.resizeLevel(before.width, before.height);
+    expect(unchanged.ok).toBe(true);
+    expect(unchanged.revision).toBe(before.revision);
+    expect(store.getSnapshot().canUndo).toBe(false);
+  });
+
   it("bounds history and metadata/activity text", () => {
     const store = new LevelStore({ storage: null, now: tickingClock(), historyLimit: 2, activityLimit: 2 });
     store.setMetadata({ name: "One" }, "human");

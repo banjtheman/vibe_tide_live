@@ -47,11 +47,12 @@ The editor describes each tile’s behavior before you paint it: dune grass and 
 - Structural and reachability validation, atomic tile patches, revision history, and undo
 - Playtest reports with completion, elapsed time, deaths, recent events, and death clustering
 - Responsive, high-contrast editing and play surfaces for desktop and mobile
+- Short, classic, long, or exact level dimensions with seafloor-anchored resizing and one-step undo
 - A compact, versioned `vt2.` level format for shareable URLs, with backward-compatible `vt1.` imports
 
 ## WebMCP
 
-VibeTide registers ten structured tools directly on the page: agents can inspect and generate levels, apply precise patches, edit metadata, change the visual background, validate reachability, start and review playtests, undo changes, and create share links. Inputs use narrow JSON Schemas plus runtime validation, while the agent and visual editor operate on the same `LevelStore` snapshot.
+VibeTide registers eleven structured tools directly on the page: agents can inspect and generate levels, resize the course, apply precise patches, edit metadata, change the visual background, validate reachability, start and review playtests, undo changes, and create share links. Inputs use narrow JSON Schemas plus runtime validation, while the agent and visual editor operate on the same `LevelStore` snapshot.
 
 See [the WebMCP implementation notes](docs/WEBMCP.md) for the complete tool contract, tile IDs, safety boundaries, and local test harness.
 

@@ -22,7 +22,7 @@ The official challenge lists usefulness, originality, execution, thoughtful use 
 
 **0–8s — Establish the surface**
 
-Open VibeTide Live. Point out that there is no embedded chatbot: the editor is already useful for a person, and the visiting agent discovers ten page tools.
+Open VibeTide Live. Point out that there is no embedded chatbot: the editor is already useful for a person, and the visiting agent discovers eleven page tools.
 
 **8–23s — Build through intent**
 
@@ -51,7 +51,7 @@ Paint one tile manually, use agent undo, and call `create_share_link`. End on: �
 ## What is already complete
 
 - Core state, generation, validation, persistence, undo, codec, and telemetry
-- Ten WebMCP tools with schemas, runtime guards, cancellation, and browser verification
+- Eleven WebMCP tools with schemas, runtime guards, cancellation, and browser verification
 - Playable Phaser runtime, three distinct enemy families, and responsive player-first UI
 - Ten original illustrated scenes and an animated eight-frame version of the upright V1 headphone otter
 - Manual paint → shared revision → agent inspection/undo round trip

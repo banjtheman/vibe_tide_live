@@ -1,5 +1,6 @@
 import {
   LEVEL_SCHEMA_VERSION,
+  LEVEL_SIZE_LIMITS,
   type Difficulty,
   type LevelBlueprint,
   type LevelDocument,
@@ -11,10 +12,10 @@ import {
 import { DEFAULT_BACKGROUND_ID, type BackgroundId } from "./backgrounds";
 import { repairLevel, validateLevel } from "./validation";
 
-export const MIN_GENERATED_WIDTH = 20;
-export const MAX_GENERATED_WIDTH = 80;
-export const MIN_GENERATED_HEIGHT = 10;
-export const MAX_GENERATED_HEIGHT = 32;
+export const MIN_GENERATED_WIDTH = LEVEL_SIZE_LIMITS.minWidth;
+export const MAX_GENERATED_WIDTH = LEVEL_SIZE_LIMITS.maxWidth;
+export const MIN_GENERATED_HEIGHT = LEVEL_SIZE_LIMITS.minHeight;
+export const MAX_GENERATED_HEIGHT = LEVEL_SIZE_LIMITS.maxHeight;
 
 const DETERMINISTIC_TIMESTAMP = "1970-01-01T00:00:00.000Z";
 

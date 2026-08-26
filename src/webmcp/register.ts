@@ -10,6 +10,7 @@ import {
   APPLY_PATCH_SCHEMA,
   CREATE_LEVEL_SCHEMA,
   EMPTY_INPUT_SCHEMA,
+  RESIZE_LEVEL_SCHEMA,
   SET_BACKGROUND_SCHEMA,
   SET_METADATA_SCHEMA,
 } from "./schemas";
@@ -26,11 +27,13 @@ import {
   parseEmptyInput,
   parseMetadata,
   parsePatch,
+  parseResizeLevel,
 } from "./validation";
 
 export const VIBE_TIDE_TOOL_NAMES = [
   "inspect_level",
   "create_level_from_blueprint",
+  "resize_level",
   "apply_level_patch",
   "set_level_metadata",
   "set_level_background",
@@ -148,6 +151,27 @@ function makeTools(
         const blueprint = parseBlueprint(input);
         assertNotAborted(options);
         return mutationResult("Created level", store.createLevel(blueprint, "agent"));
+      },
+    },
+    {
+      name: "resize_level",
+      title: "Resize VibeTide level",
+      description:
+        "Change the current level length, height, or both. The left edge and seafloor stay anchored; added space opens on the right or above, while shorter dimensions trim the far right or sky. A finish pinned to the far edge follows a longer course, and the complete change can be undone once.",
+      inputSchema: RESIZE_LEVEL_SCHEMA,
+      annotations: { readOnlyHint: false, untrustedContentHint: false },
+      execute: async (input, options) => {
+        const dimensions = parseResizeLevel(input);
+        assertNotAborted(options);
+        const level = store.getSnapshot().level;
+        return mutationResult(
+          "Resized level",
+          store.resizeLevel(
+            dimensions.width ?? level.width,
+            dimensions.height ?? level.height,
+            "agent",
+          ),
+        );
       },
     },
     {

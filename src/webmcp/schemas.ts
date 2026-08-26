@@ -1,4 +1,5 @@
 import { BACKGROUND_IDS } from "../core/backgrounds";
+import { LEVEL_SIZE_LIMITS } from "../core/contracts";
 import type { JsonSchema } from "./types";
 
 const tileIdSchema = {
@@ -41,8 +42,16 @@ export const CREATE_LEVEL_SCHEMA = {
       maxLength: 240,
       description: "Short description of the intended experience.",
     },
-    width: { type: "integer", minimum: 20, maximum: 80 },
-    height: { type: "integer", minimum: 10, maximum: 32 },
+    width: {
+      type: "integer",
+      minimum: LEVEL_SIZE_LIMITS.minWidth,
+      maximum: LEVEL_SIZE_LIMITS.maxWidth,
+    },
+    height: {
+      type: "integer",
+      minimum: LEVEL_SIZE_LIMITS.minHeight,
+      maximum: LEVEL_SIZE_LIMITS.maxHeight,
+    },
     difficulty: difficultySchema,
     primary_mechanic: primaryMechanicSchema,
     background: backgroundSchema,
@@ -67,6 +76,26 @@ export const CREATE_LEVEL_SCHEMA = {
     },
   },
   required: ["name"],
+  additionalProperties: false,
+} as const satisfies JsonSchema;
+
+export const RESIZE_LEVEL_SCHEMA = {
+  type: "object",
+  properties: {
+    width: {
+      type: "integer",
+      minimum: LEVEL_SIZE_LIMITS.minWidth,
+      maximum: LEVEL_SIZE_LIMITS.maxWidth,
+      description: "New course length in tiles. Omit it to keep the current length.",
+    },
+    height: {
+      type: "integer",
+      minimum: LEVEL_SIZE_LIMITS.minHeight,
+      maximum: LEVEL_SIZE_LIMITS.maxHeight,
+      description: "New course height in tiles. Omit it to keep the current height.",
+    },
+  },
+  minProperties: 1,
   additionalProperties: false,
 } as const satisfies JsonSchema;
 
