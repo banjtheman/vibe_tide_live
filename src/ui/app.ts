@@ -42,8 +42,11 @@ async function copyText(value: string): Promise<void> {
   input.style.opacity = "0";
   document.body.append(input);
   input.select();
-  document.execCommand("copy");
+  const copied = document.execCommand("copy");
   input.remove();
+  if (!copied) {
+    throw new Error("The browser did not copy the link.");
+  }
 }
 
 function formatDuration(milliseconds: number): string {
@@ -106,7 +109,7 @@ export function mountStudioUI(
         </div>
         <div class="topbar__actions">
           <button class="button button--quiet button--small" type="button" data-action="undo">Undo</button>
-          <button class="button button--quiet button--small" type="button" data-action="share">Share</button>
+          <button class="button button--quiet button--small button--share" type="button" data-action="share" aria-label="Share playable level">Share<span class="button__optional"> level</span></button>
           <button class="button button--accent" type="button" data-action="play"><span aria-hidden="true">▶</span> Play level</button>
         </div>
       </header>
@@ -225,14 +228,33 @@ export function mountStudioUI(
             <ol class="activity-list" data-activity></ol>
           </section>
 
-          <section class="rail__section">
-            <button class="button button--wide" type="button" data-action="export">Download level</button>
+          <section class="rail__section share-card">
+            <p class="eyebrow">Share the tide</p>
+            <h2 class="section-title">Send this level</h2>
+            <p class="section-copy">Copy one link that opens this exact level ready to play. No download or account needed.</p>
+            <button class="button button--sea button--wide section-action" type="button" data-action="share">Get playable link</button>
           </section>
         </aside>
       </main>
 
       <span hidden data-webmcp-chip></span>
       <span hidden data-tool-count></span>
+      <dialog class="share-dialog" data-share-dialog aria-labelledby="share-dialog-title" aria-describedby="share-dialog-copy">
+        <div class="share-dialog__surface">
+          <button class="share-dialog__close" type="button" data-action="close-share" aria-label="Close share window">×</button>
+          <p class="eyebrow">Ready for friends</p>
+          <h2 class="share-dialog__title" id="share-dialog-title">Share a playable level</h2>
+          <p class="share-dialog__copy" id="share-dialog-copy">Anyone with this link lands on your level in Play mode. They can jump in immediately or switch to Build to remix it.</p>
+          <label class="field share-dialog__field">
+            <span class="field-label">Playable link</span>
+            <input type="url" readonly data-share-url aria-label="Playable level link" />
+          </label>
+          <div class="share-dialog__actions">
+            <button class="button button--accent" type="button" data-action="copy-share">Copy link</button>
+            <a class="button button--sea" href="/" target="_blank" rel="noopener" data-share-open>Open level</a>
+          </div>
+        </div>
+      </dialog>
       <div class="toast-region" aria-live="polite" aria-atomic="true" data-toasts></div>
     </div>`;
 
@@ -266,6 +288,11 @@ export function mountStudioUI(
   const playButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-action="play"], [data-mode="play"]')];
   const topPlayButton = requireElement<HTMLButtonElement>(root, '[data-action="play"]');
   const undoButton = requireElement<HTMLButtonElement>(root, '[data-action="undo"]');
+  const shareButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-action="share"]')];
+  const shareDialog = requireElement<HTMLDialogElement>(root, "[data-share-dialog]");
+  const shareUrlInput = requireElement<HTMLInputElement>(root, "[data-share-url]");
+  const shareOpenLink = requireElement<HTMLAnchorElement>(root, "[data-share-open]");
+  const shareCopyButton = requireElement<HTMLButtonElement>(root, '[data-action="copy-share"]');
 
   let game: VibeTideGameController | null = null;
   let renderedRevision = -1;
@@ -441,23 +468,36 @@ export function mountStudioUI(
       .catch(() => showToast("Could not access the clipboard"));
   });
 
-  requireElement<HTMLButtonElement>(root, '[data-action="share"]').addEventListener("click", () => {
-    const shareUrl = options.createShareUrl(store.exportProject());
+  const copyShareUrl = (shareUrl: string): void => {
     void copyText(shareUrl)
-      .then(() => showToast("Playable level link copied"))
-      .catch(() => showToast("Could not access the clipboard"));
-  });
+      .then(() => showToast("Playable link copied — it opens in Play mode"))
+      .catch(() => {
+        shareUrlInput.focus();
+        shareUrlInput.select();
+        showToast("Copying didn’t work. Copy the selected link instead.");
+      });
+  };
 
-  requireElement<HTMLButtonElement>(root, '[data-action="export"]').addEventListener("click", () => {
-    const snapshot = store.exportProject();
-    const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `${snapshot.metadata.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "vibetide-level"}.json`;
-    anchor.click();
-    URL.revokeObjectURL(url);
-    showToast("Level downloaded");
+  const openShareDialog = (): void => {
+    const shareUrl = options.createShareUrl(store.exportProject());
+    shareUrlInput.value = shareUrl;
+    shareOpenLink.href = shareUrl;
+    if (typeof shareDialog.showModal === "function") {
+      if (!shareDialog.open) shareDialog.showModal();
+    } else {
+      shareDialog.setAttribute("open", "");
+    }
+    copyShareUrl(shareUrl);
+  };
+
+  shareButtons.forEach((button) => button.addEventListener("click", openShareDialog));
+  shareCopyButton.addEventListener("click", () => copyShareUrl(shareUrlInput.value));
+  requireElement<HTMLButtonElement>(root, '[data-action="close-share"]').addEventListener("click", () => {
+    if (typeof shareDialog.close === "function") shareDialog.close();
+    else shareDialog.removeAttribute("open");
+  });
+  shareDialog.addEventListener("click", (event) => {
+    if (event.target === shareDialog && typeof shareDialog.close === "function") shareDialog.close();
   });
 
   root.querySelectorAll<HTMLButtonElement>("[data-control]").forEach((button) => {

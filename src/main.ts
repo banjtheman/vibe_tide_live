@@ -1,24 +1,30 @@
 import "./styles.css";
 
-import { createLevelStore, encodeLevel, tryDecodeLevel, type LevelDocument } from "./core";
+import { createLevelStore, tryDecodeLevel, type LevelDocument } from "./core";
 import type { VibeTideGameController } from "./game";
+import { createPlayableShareUrl, parseSharedLevelUrl, shouldAutoStartSharedLevel } from "./share";
 import { mountStudioUI } from "./ui";
 import { registerVibeTideTools, VIBE_TIDE_TOOL_NAMES, type VibeTideToolsRegistration } from "./webmcp";
 
 function shareUrlFor(level: LevelDocument): string {
-  const url = new URL(window.location.href);
-  url.search = "";
-  url.hash = "";
-  url.searchParams.set("level", encodeLevel(level));
-  return url.toString();
+  return createPlayableShareUrl(level);
 }
 
 const root = document.querySelector<HTMLElement>("#app");
 if (!root) throw new Error("VibeTide could not find its app mount.");
 
-const sharedLevel = new URLSearchParams(window.location.search).get("level");
-const decoded = sharedLevel ? tryDecodeLevel(sharedLevel) : null;
+const sharedRequest = parseSharedLevelUrl(window.location.href);
+const decoded = sharedRequest.levelCode ? tryDecodeLevel(sharedRequest.levelCode) : null;
 const store = createLevelStore(decoded?.ok ? { initialLevel: decoded.level } : {});
+if (
+  shouldAutoStartSharedLevel(
+    sharedRequest,
+    decoded?.ok === true,
+    store.getSnapshot().validation.valid,
+  )
+) {
+  store.beginPlaytest();
+}
 const ui = mountStudioUI(root, store, { createShareUrl: shareUrlFor });
 let game: VibeTideGameController | null = null;
 const gameReady = import("./game")
@@ -33,7 +39,7 @@ const gameReady = import("./game")
   });
 
 if (decoded && !decoded.ok) {
-  ui.showToast(`Shared level could not be opened: ${decoded.error}`);
+  ui.showToast("This level link is damaged or outdated. Start a new level to keep playing.");
 }
 
 let webMCP: VibeTideToolsRegistration | null = null;

@@ -243,7 +243,7 @@ function makeTools(
       name: "create_share_link",
       title: "Create level share link",
       description:
-        "Create a durable share URL for the current level revision using the host application's canonical encoder.",
+        "Create a self-contained public URL that opens the current level revision directly in Play mode.",
       inputSchema: EMPTY_INPUT_SCHEMA,
       annotations: { readOnlyHint: false, untrustedContentHint: false },
       execute: async (input, options) => {

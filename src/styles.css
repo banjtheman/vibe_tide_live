@@ -1204,6 +1204,91 @@ kbd {
   line-height: 1.35;
 }
 
+.share-dialog {
+  width: min(34rem, calc(100vw - 2rem));
+  max-width: 100%;
+  margin: auto;
+  padding: 0;
+  color: var(--color-ink);
+  background: var(--color-transparent);
+  border: 0;
+  border-radius: var(--radius-card);
+  overflow: visible;
+}
+
+.share-dialog::backdrop {
+  background: var(--color-black-alpha);
+  backdrop-filter: blur(4px);
+}
+
+.share-dialog__surface {
+  position: relative;
+  padding: var(--space-6);
+  background:
+    radial-gradient(circle at 88% 0%, var(--color-sun-wash), var(--color-transparent) 14rem),
+    var(--color-paper);
+  border: 2px solid var(--color-ink);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-float);
+}
+
+.share-dialog__close {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  display: grid;
+  place-items: center;
+  width: var(--control-height);
+  height: var(--control-height);
+  padding: 0;
+  color: var(--color-muted);
+  background: var(--color-paper-2);
+  border: 1px solid var(--color-rule);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: var(--text-xl);
+}
+
+.share-dialog__title {
+  max-width: calc(100% - 3rem);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  line-height: 1.05;
+  letter-spacing: var(--tracking-tight);
+}
+
+.share-dialog__copy {
+  margin: var(--space-3) 0 0;
+  color: var(--color-muted);
+  line-height: 1.55;
+}
+
+.share-dialog__field {
+  margin-top: var(--space-5);
+}
+
+.share-dialog__field input {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
+.share-dialog__actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.share-dialog__actions .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0;
+  text-align: center;
+  text-decoration: none;
+}
+
 .toast-region {
   position: fixed;
   right: var(--space-4);
@@ -1287,7 +1372,7 @@ kbd {
     padding: var(--space-3);
   }
 
-  .topbar__actions .button--quiet {
+  .topbar__actions .button--quiet:not(.button--share) {
     display: none;
   }
 
@@ -1325,6 +1410,18 @@ kbd {
 }
 
 @media (max-width: 34rem) {
+  .button__optional {
+    display: none;
+  }
+
+  .share-dialog__surface {
+    padding: var(--space-5);
+  }
+
+  .share-dialog__actions {
+    flex-direction: column;
+  }
+
   .topbar__actions .button--accent {
     padding-inline: var(--space-3);
   }

@@ -12,6 +12,8 @@ await document.modelContext.registerTool(tool, { signal });
 
 The app treats execution options defensively because early host implementations may omit the optional invocation object even though the current draft documents `{ signal }`. When supplied, cancellation is checked before and after asynchronous callbacks.
 
+`create_share_link` returns the same self-contained `vt1.` level URL as the human Share action. Current links include `mode=play`, so recipients land directly in the Phaser playtest; older links without a mode continue to open in the builder.
+
 ## Design rules
 
 - Prefer domain operations over DOM imitation.

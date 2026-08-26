@@ -18,7 +18,7 @@ VibeTide Live is a colorful 2D platformer and instant level maker. Run, jump, do
 
 - **Play:** Tackle side-scrolling routes with slippery sea glass, water, vents, spikes, patrolling reef crawlers, flying swell-wings, and projectile-firing tide-spitters.
 - **Build:** Switch to Build mode and paint tiles directly, edit the level’s name and style, validate the route, or undo a change.
-- **Share:** Create a compact link that opens the same playable level for anyone—no account or server save required.
+- **Share:** Copy one compact URL that opens the same level directly in Play mode—no account, JSON download, or server save required.
 - **Create with an agent:** In a WebMCP-capable browser, describe the experience you want. The agent can build, validate, playtest, repair, and share it using the tools exposed by the page.
 
 Try this:
@@ -88,7 +88,7 @@ WebMCP tools ─┘       │                              │
 - `src/game` contains the Phaser runtime, enemies, input, and physics integration.
 - `src/ui` contains the human workbench and visual tile editor.
 
-Levels persist in the browser’s local storage. A share action serializes the current level into the URL, so opening that URL reconstructs the shared snapshot without uploading it to a backend. Playtest telemetry stays local unless a user deliberately shares its result through their agent conversation.
+Levels persist in the browser’s local storage. A share action serializes the current level into the URL, so opening that URL reconstructs the shared snapshot and starts it in Play mode without uploading anything to a backend. The recipient can switch to Build to remix it. Playtest telemetry stays local unless a user deliberately shares its result through their agent conversation.
 
 ## Compatibility
 
