@@ -1,0 +1,18 @@
+Tool: OpenAI built-in ImageGen
+Use case: stylized-concept
+Output: public/og.png
+
+Asset type: landscape social share card / polished 2D game key art
+Primary request: Create one original branded social-preview image for VibeTide Live.
+Input images: Image 1 is a style and environment reference for the warm textured sunset-ocean setting and coral/teal/navy/warm-gold palette. Image 2 is a character reference for the exact upright cute brown otter design, proportions, cream muzzle and belly, and purple headphones with bright cyan ear-cup accents. Use both only as references; create a new composition and do not reproduce either source layout.
+Scene/backdrop: a glowing sunset ocean with painterly tropical silhouettes and luminous atmosphere.
+Subject: one upright cute brown otter wearing purple-and-cyan headphones, joyfully leaping across clearly solid, opaque turquoise and coral 2D platform blocks.
+Style/medium: polished playful 2D platform-game key art; crisp character silhouette; richly textured illustrated background; consumer-facing and energetic.
+Composition/framing: wide landscape social card, approximately 16:9. Center the title in the upper-middle with strong readability. Keep the otter and platforms prominent below it. Keep all text, character, and important content comfortably inside generous safe margins away from every edge.
+Lighting/mood: warm sunset glow, adventurous, joyful, musical, inviting.
+Color palette: coral, turquoise teal, deep navy, warm gold.
+Text (verbatim): "VIBETIDE LIVE"
+Supporting text (verbatim): "PLAY • BUILD • SHARE"
+Typography: bold playful game-title lettering, highly legible; title rendered exactly once, supporting line rendered exactly once directly beneath it.
+Constraints: spell VIBETIDE as one word exactly: V-I-B-E-T-I-D-E. Render only the two specified text lines. Solid opaque platform blocks must be unmistakably visible. One otter only.
+Avoid: any other text, logos, UI chrome, browser elements, watermarks, transparent or glass blocks, cropped title, cropped otter, cropped platforms, content touching edges.
