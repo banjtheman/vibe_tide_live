@@ -1,6 +1,6 @@
 # VibeTide Live
 
-**A live 2D platformer workbench where people and agents build, playtest, and repair the same level on the same page.**
+**A live 2D platformer where players and their agents build, play, and remix the same level on the same page.**
 
 VibeTide Live is a fresh Phaser implementation of the original VibeTide idea, built for the 2026 WebMCP Challenge. There is deliberately no chatbot inside the app. A WebMCP-capable browser discovers the page’s structured level-design tools, so ChatGPT or Codex can create a playable route, revise exact tiles, start the game, inspect playtest telemetry, and produce a share link without guessing through the visual UI.
 
@@ -24,11 +24,12 @@ That closed loop is the point: WebMCP turns a game editor into a shared creative
 - Atomic tile patches, metadata edits, revision history, undo, and local persistence
 - Conservative structural and reachability validation
 - Phaser 3 side-scrolling runtime with Arcade physics, coyote time, jump buffering, ice momentum, hazards, goals, camera follow, keyboard controls, and mobile touch controls
+- Three placeable enemy families: patrolling reef crawlers, flying swell-wings, and ranged tide-spitters with visible projectiles
 - Playtest sessions with completion, elapsed time, deaths, recent events, and death clustering
 - Compact versioned `vt1.` level codec for playable share URLs
 - Nine imperative WebMCP tools registered directly on `document.modelContext`
-- Responsive workbench UI with manual grid painting and visible human/agent/game activity
-- Original VibeTide coastal art and a headphone-wearing otter hero
+- Responsive, player-first UI with high-contrast manual grid painting and visible human/agent/game activity
+- The upright V1 headphone otter, rebuilt as an eight-frame idle/run/jump/fall animation atlas
 
 ## Page tools
 

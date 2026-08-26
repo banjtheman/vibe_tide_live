@@ -10,19 +10,7 @@ import type { VibeTideGameController } from "../game";
 import { mountLevelEditor } from "./editor";
 
 const AGENT_PROMPT =
-  "Build me a moderate VibeTide level called Sunset Circuit. Start friendly, introduce slippery sea-glass platforms, add one fair spike challenge, keep the goal reachable, then start a playtest.";
-
-const TOOL_NAMES = [
-  "inspect_level",
-  "create_level_from_blueprint",
-  "apply_level_patch",
-  "set_level_metadata",
-  "validate_level",
-  "get_playtest_report",
-  "start_playtest",
-  "undo_last_change",
-  "create_share_link",
-] as const;
+  "Make me a playful beach level called Sunset Circuit. Give it an easy opening, a slippery sea-glass stretch, one fair spike challenge, and a finish I can reach.";
 
 export interface StudioUIController {
   readonly gameMount: HTMLElement;
@@ -74,12 +62,6 @@ function makePaletteMarkup(): string {
   ).join("");
 }
 
-function makeToolMarkup(): string {
-  return TOOL_NAMES.map(
-    (name) => `<li><span>${name}</span><span class="tool-badge">page</span></li>`,
-  ).join("");
-}
-
 export function mountStudioUI(
   root: HTMLElement,
   store: StudioStore,
@@ -89,30 +71,30 @@ export function mountStudioUI(
     <div class="studio-shell">
       <header class="topbar">
         <a class="wordmark" href="/" aria-label="VibeTide Live home">
-          <span class="wordmark__mark" aria-hidden="true">≈</span>
+          <span class="wordmark__mark" aria-hidden="true"><span>≈</span></span>
           <span>
             <span class="wordmark__wave">VibeTide</span>
-            <span class="wordmark__live">Live workbench</span>
+            <span class="wordmark__live">Play · build · share</span>
           </span>
         </a>
-        <div class="topbar__center" aria-label="Document status">
-          <span class="connection-chip" data-webmcp-chip>Checking page tools</span>
-          <span class="revision-chip" data-revision>Revision 0</span>
+        <div class="topbar__center" aria-label="Level status">
+          <span class="save-chip"><span aria-hidden="true">●</span> Saved as you build</span>
+          <span class="revision-chip" data-revision>Version 0</span>
         </div>
         <div class="topbar__actions">
           <button class="button button--quiet button--small" type="button" data-action="undo">Undo</button>
           <button class="button button--quiet button--small" type="button" data-action="share">Share</button>
-          <button class="button button--accent" type="button" data-action="play">Play now</button>
+          <button class="button button--accent" type="button" data-action="play"><span aria-hidden="true">▶</span> Play level</button>
         </div>
       </header>
 
       <main class="workbench">
         <aside class="rail rail--left" aria-label="Level tools">
           <section class="rail__section">
-            <p class="eyebrow">Level details</p>
-            <h2 class="section-title">Shape the tide</h2>
+            <p class="eyebrow">Your level</p>
+            <h2 class="section-title">Set the scene</h2>
             <label class="field">
-              <span class="field-label">Name</span>
+              <span class="field-label">Level name</span>
               <input data-field="name" maxlength="80" autocomplete="off" />
             </label>
             <label class="field">
@@ -142,33 +124,34 @@ export function mountStudioUI(
           </section>
 
           <section class="rail__section">
-            <p class="eyebrow">Brush</p>
-            <h2 class="section-title">Paint the route</h2>
+            <p class="eyebrow">Build pieces</p>
+            <h2 class="section-title">Pick, then paint</h2>
+            <p class="section-copy palette-intro">Choose a piece and drag it across the level.</p>
             <div class="palette" aria-label="Tile palette">${makePaletteMarkup()}</div>
           </section>
 
           <section class="rail__section">
-            <p class="eyebrow">Draft</p>
-            <h2 class="section-title">Need another wave?</h2>
-            <p class="section-copy">Generate a fresh, valid route from the details above. Your current draft stays in the shared URL if you copy it first.</p>
-            <button class="button button--sea" type="button" data-action="fresh" style="width: 100%; margin-top: var(--space-3)">Fresh draft</button>
+            <p class="eyebrow">New route</p>
+            <h2 class="section-title">Mix it up</h2>
+            <p class="section-copy">Create a fresh route from the settings above.</p>
+            <button class="button button--sea button--wide section-action" type="button" data-action="fresh">Surprise me</button>
           </section>
         </aside>
 
-        <section class="stage-shell" aria-label="Level workbench">
+        <section class="stage-shell" aria-label="VibeTide level">
           <div class="stage-toolbar">
             <div class="stage-title">
               <h1 data-level-name>First light</h1>
-              <p data-level-meta>48 × 18 · beginner · human</p>
+              <p data-level-meta>48 × 18 · beginner</p>
             </div>
-            <div class="mode-switch" aria-label="Studio mode">
-              <button type="button" data-mode="edit" aria-pressed="true">Edit</button>
+            <div class="mode-switch" aria-label="Level mode">
+              <button type="button" data-mode="edit" aria-pressed="true">Build</button>
               <button type="button" data-mode="play" aria-pressed="false">Play</button>
             </div>
           </div>
 
           <div class="stage" data-stage data-mode="edit">
-            <p class="stage-hint" data-stage-hint>Drag to paint · choose a tile on the left</p>
+            <p class="stage-hint" data-stage-hint>Choose a piece, then drag to paint</p>
             <div class="editor-viewport" data-editor></div>
             <div class="game-mount" data-game-mount></div>
             <div class="touch-controls" data-touch-controls aria-label="Touch controls">
@@ -181,63 +164,51 @@ export function mountStudioUI(
           </div>
 
           <div class="stage-foot">
-            <span data-stage-status>Ready to edit</span>
-            <span class="stage-foot__keys"><kbd>A</kbd><kbd>D</kbd> move <kbd>Space</kbd> jump</span>
+            <span class="stage-foot__status"><span aria-hidden="true">●</span> <span data-stage-status>Ready to build</span></span>
+            <span class="stage-foot__keys"><kbd>A</kbd><kbd>D</kbd> move <span aria-hidden="true">·</span> <kbd>Space</kbd> jump</span>
           </div>
         </section>
 
-        <aside class="rail rail--right" aria-label="Agent and playtest details">
+        <aside class="rail rail--right" aria-label="Level and playtest details">
           <section class="rail__section">
-            <p class="eyebrow">Live state</p>
-            <h2 class="section-title">Route pulse</h2>
+            <p class="eyebrow">Playtest</p>
+            <h2 class="section-title">How’s this run?</h2>
             <div class="metric-grid">
-              <div class="metric"><span class="metric__label">Reachable</span><strong class="metric__value" data-metric="reachable">0%</strong></div>
+              <div class="metric"><span class="metric__label">Open tiles</span><strong class="metric__value" data-metric="reachable">0</strong></div>
               <div class="metric"><span class="metric__label">Deaths</span><strong class="metric__value" data-metric="deaths">0</strong></div>
-              <div class="metric"><span class="metric__label">Time</span><strong class="metric__value" data-metric="time">—</strong></div>
-              <div class="metric"><span class="metric__label">Author</span><strong class="metric__value" data-metric="author">You</strong></div>
+              <div class="metric"><span class="metric__label">Best run</span><strong class="metric__value" data-metric="time">—</strong></div>
+              <div class="metric"><span class="metric__label">Made by</span><strong class="metric__value metric__value--word" data-metric="author">You</strong></div>
             </div>
-            <div class="validity" data-validity data-valid="true" style="margin-top: var(--space-3)">
+            <div class="validity" data-validity data-valid="true">
               <span class="validity__mark" aria-hidden="true">✓</span>
               <div><strong data-validity-title>Ready to ride</strong><span data-validity-copy>The spawn can reach the finish buoy.</span></div>
             </div>
           </section>
 
           <section class="rail__section">
-            <p class="eyebrow">Agent handoff</p>
-            <h2 class="section-title">Ask from the browser</h2>
-            <p class="section-copy">There is no chatbot in the page. ChatGPT or Codex discovers these tools while visiting it.</p>
-            <div class="prompt-card" style="margin-top: var(--space-3)">
-              <code>${AGENT_PROMPT}</code>
-              <button class="button button--accent button--small" type="button" data-action="copy-prompt">Copy starter prompt</button>
+            <p class="eyebrow">Level ideas</p>
+            <h2 class="section-title">Make the next wave</h2>
+            <p class="section-copy">Tell Codex what sounds fun, or start with this idea.</p>
+            <div class="idea-card">
+              <p>${AGENT_PROMPT}</p>
+              <button class="button button--accent button--wide" type="button" data-action="copy-prompt">Copy level idea</button>
             </div>
-            <p class="tool-count" data-tool-count style="margin: var(--space-3) 0 var(--space-2)">9 page tools declared</p>
-            <ul class="tool-list">${makeToolMarkup()}</ul>
           </section>
 
           <section class="rail__section">
-            <p class="eyebrow">Activity</p>
-            <h2 class="section-title">What changed</h2>
+            <p class="eyebrow">Level history</p>
+            <h2 class="section-title">Recent changes</h2>
             <ol class="activity-list" data-activity></ol>
           </section>
 
           <section class="rail__section">
-            <button class="button" type="button" data-action="export" style="width: 100%">Export level JSON</button>
+            <button class="button button--wide" type="button" data-action="export">Download level</button>
           </section>
         </aside>
       </main>
 
-      <footer class="status-strip" aria-label="VibeTide capabilities" tabindex="0">
-        <div class="status-strip__track">
-          <span class="status-strip__item">Build on the live page</span>
-          <span class="status-strip__item">Play without a rebuild</span>
-          <span class="status-strip__item">Inspect every revision</span>
-          <span class="status-strip__item">Repair from real playtests</span>
-          <span class="status-strip__item">Build on the live page</span>
-          <span class="status-strip__item">Play without a rebuild</span>
-          <span class="status-strip__item">Inspect every revision</span>
-          <span class="status-strip__item">Repair from real playtests</span>
-        </div>
-      </footer>
+      <span hidden data-webmcp-chip></span>
+      <span hidden data-tool-count></span>
       <div class="toast-region" aria-live="polite" aria-atomic="true" data-toasts></div>
     </div>`;
 
@@ -265,6 +236,7 @@ export function mountStudioUI(
   const modeButtons = [...root.querySelectorAll<HTMLButtonElement>("[data-mode]")];
   const paletteButtons = [...root.querySelectorAll<HTMLButtonElement>("[data-brush]")];
   const playButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-action="play"], [data-mode="play"]')];
+  const topPlayButton = requireElement<HTMLButtonElement>(root, '[data-action="play"]');
   const undoButton = requireElement<HTMLButtonElement>(root, '[data-action="undo"]');
 
   let game: VibeTideGameController | null = null;
@@ -286,7 +258,7 @@ export function mountStudioUI(
     if (entries.length === 0) {
       const empty = document.createElement("li");
       empty.className = "section-copy";
-      empty.textContent = "Edits from you, the game, and the visiting agent will appear here.";
+      empty.textContent = "Your edits and playtest moments will show up here.";
       activityList.replaceChildren(empty);
       return;
     }
@@ -296,7 +268,15 @@ export function mountStudioUI(
       item.dataset.source = entry.source;
       const source = document.createElement("span");
       source.className = "activity__source";
-      source.textContent = `${entry.source} · r${entry.revision}`;
+      const sourceName =
+        entry.source === "human"
+          ? "You"
+          : entry.source === "agent"
+            ? "Codex"
+            : entry.source === "game"
+              ? "Playtest"
+              : "VibeTide";
+      source.textContent = `${sourceName} · v${entry.revision}`;
       const detail = document.createElement("span");
       detail.className = "activity__detail";
       detail.textContent = `${entry.action} — ${entry.detail}`;
@@ -318,16 +298,20 @@ export function mountStudioUI(
     }
 
     stage.dataset.mode = snapshot.mode;
-    stageHint.textContent = snapshot.mode === "play" ? "Reach the coral finish buoy" : "Drag to paint · choose a tile on the left";
-    stageStatus.textContent = snapshot.mode === "play" ? "Playtest recording live" : "Every edit is available to the visiting agent";
+    stageHint.textContent = snapshot.mode === "play" ? "Reach the coral finish buoy!" : "Choose a piece, then drag to paint";
+    stageStatus.textContent = snapshot.mode === "play" ? "Run in progress" : "Your changes save as you paint";
     levelName.textContent = level.metadata.name;
-    levelMeta.textContent = `${level.width} × ${level.height} · ${level.metadata.difficulty} · ${level.metadata.author}`;
-    revision.textContent = `Revision ${level.revision}`;
+    levelMeta.textContent = `${level.width} × ${level.height} · ${level.metadata.difficulty}`;
+    revision.textContent = `Version ${level.revision}`;
     undoButton.disabled = !snapshot.canUndo;
     playButtons.forEach((button) => {
       button.disabled = !validation.valid;
-      button.title = validation.valid ? "Play this revision" : "Fix validation issues before playing";
+      button.title = validation.valid ? "Play this level" : "Fix the route before playing";
     });
+    topPlayButton.disabled = snapshot.mode === "play" ? false : !validation.valid;
+    topPlayButton.textContent = snapshot.mode === "play" ? "← Build level" : "▶ Play level";
+    topPlayButton.title =
+      snapshot.mode === "play" ? "Return to the level builder" : topPlayButton.title;
     modeButtons.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.mode === snapshot.mode)));
 
     syncField(nameInput, level.metadata.name);
@@ -339,7 +323,8 @@ export function mountStudioUI(
     const report = snapshot.activePlaytest ?? snapshot.lastPlaytest;
     requireElement<HTMLElement>(root, '[data-metric="deaths"]').textContent = String(report?.deaths ?? 0);
     requireElement<HTMLElement>(root, '[data-metric="time"]').textContent = formatDuration(report?.elapsedMs ?? 0);
-    requireElement<HTMLElement>(root, '[data-metric="author"]').textContent = level.metadata.author === "human" ? "You" : level.metadata.author === "agent" ? "Agent" : "Both";
+    requireElement<HTMLElement>(root, '[data-metric="author"]').textContent =
+      level.metadata.author === "human" ? "You" : level.metadata.author === "agent" ? "Codex" : "You + Codex";
 
     validity.dataset.valid = String(validation.valid);
     validityMark.textContent = validation.valid ? "✓" : "!";
@@ -352,7 +337,7 @@ export function mountStudioUI(
 
   const switchMode = (mode: "edit" | "play"): void => {
     if (mode === "play" && !store.getSnapshot().validation.valid) {
-      showToast("Fix the route issue before starting a playtest.");
+      showToast("Fix the route before starting a run.");
       return;
     }
     store.setMode(mode, "human");
@@ -364,7 +349,9 @@ export function mountStudioUI(
   modeButtons.forEach((button) => {
     button.addEventListener("click", () => switchMode(button.dataset.mode === "play" ? "play" : "edit"));
   });
-  requireElement<HTMLButtonElement>(root, '[data-action="play"]').addEventListener("click", () => switchMode("play"));
+  topPlayButton.addEventListener("click", () => {
+    switchMode(store.getSnapshot().mode === "play" ? "edit" : "play");
+  });
   undoButton.addEventListener("click", () => {
     store.undo("human");
   });
@@ -403,7 +390,7 @@ export function mountStudioUI(
 
   requireElement<HTMLButtonElement>(root, '[data-action="copy-prompt"]').addEventListener("click", () => {
     void copyText(AGENT_PROMPT)
-      .then(() => showToast("Starter prompt copied"))
+      .then(() => showToast("Level idea copied"))
       .catch(() => showToast("Could not access the clipboard"));
   });
 
@@ -423,7 +410,7 @@ export function mountStudioUI(
     anchor.download = `${snapshot.metadata.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "vibetide-level"}.json`;
     anchor.click();
     URL.revokeObjectURL(url);
-    showToast("Level JSON exported");
+    showToast("Level downloaded");
   });
 
   root.querySelectorAll<HTMLButtonElement>("[data-control]").forEach((button) => {

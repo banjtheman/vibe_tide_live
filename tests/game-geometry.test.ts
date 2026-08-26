@@ -11,6 +11,7 @@ import {
   tileAtWorldPoint,
   worldToGridPoint,
 } from "../src/game/geometry";
+import { deriveEnemySpawns, isEnemyTile } from "../src/game/enemies";
 
 function level(tiles: TileId[][]): LevelDocument {
   return {
@@ -96,5 +97,49 @@ describe("grid geometry", () => {
     expect([5, 6, 7].every((tile) => isHazardTile(tile as TileId))).toBe(true);
     expect(isSolidTile(7)).toBe(false);
     expect(isHazardTile(0)).toBe(false);
+  });
+});
+
+describe("deterministic enemy placement", () => {
+  it("turns explicit enemy marker tiles into their matching archetypes", () => {
+    const document = level([
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 8, 0, 0, 0, 10, 0, 3],
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    ]);
+
+    const spawns = deriveEnemySpawns(document);
+    expect(spawns.map(({ archetype, cell }) => ({ archetype, cell }))).toEqual([
+      { archetype: "reef-crawler", cell: { x: 5, y: 4 } },
+      { archetype: "swell-wing", cell: { x: 7, y: 1 } },
+      { archetype: "tide-spitter", cell: { x: 9, y: 4 } },
+    ]);
+    expect([8, 9, 10].every((tile) => isEnemyTile(tile))).toBe(true);
+  });
+
+  it("adds a stable, well-spaced fallback population to marker-free legacy levels", () => {
+    const width = 30;
+    const tiles: TileId[][] = Array.from({ length: 6 }, () =>
+      Array<TileId>(width).fill(0),
+    );
+    tiles[4]![28] = 3;
+    tiles[5]!.fill(1);
+    const document = level(tiles);
+
+    const first = deriveEnemySpawns(document);
+    const second = deriveEnemySpawns(document);
+    expect(second).toEqual(first);
+    expect(new Set(first.map((spawn) => spawn.archetype))).toEqual(
+      new Set(["reef-crawler", "swell-wing", "tide-spitter"]),
+    );
+    expect(first.every((spawn) => spawn.anchorCell.x >= 5 && spawn.anchorCell.x <= 25)).toBe(
+      true,
+    );
+    expect(first.every((spawn, index) => index === 0 || spawn.cell.x - first[index - 1]!.cell.x >= 3)).toBe(
+      true,
+    );
   });
 });

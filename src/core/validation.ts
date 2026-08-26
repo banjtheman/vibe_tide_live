@@ -21,7 +21,9 @@ export const REACHABILITY_RULES = Object.freeze({
 
 const TILE_ID_SET = new Set<number>(TILE_IDS);
 const SUPPORT_TILES = new Set<TileId>([1, 2, 4]);
-const PASSABLE_TILES = new Set<TileId>([0, 3]);
+// Enemy tiles are editor markers rather than world collision. During play the
+// marker disappears and an actor is spawned at that cell.
+const PASSABLE_TILES = new Set<TileId>([0, 3, 8, 9, 10]);
 
 export interface RepairOptions {
   now?: string;
@@ -78,7 +80,7 @@ function collectStandingCells(level: LevelDocument): GridPoint[] {
 }
 
 function findSpawn(standingCells: readonly GridPoint[], level: LevelDocument): GridPoint | null {
-  const candidates = standingCells.filter(({ x, y }) => tileAt(level, x, y) !== 3);
+  const candidates = standingCells.filter(({ x, y }) => tileAt(level, x, y) === 0);
   candidates.sort((a, b) => a.x - b.x || b.y - a.y);
   const first = candidates[0];
   return first ? { ...first } : null;
@@ -226,7 +228,7 @@ export function validateLevel(level: LevelDocument): ValidationReport {
         if (!isTileId(row[x])) {
           issues.push({
             code: "invalid_tile",
-            message: `Tile at ${x},${y} is outside the supported 0–7 range.`,
+            message: `Tile at ${x},${y} is outside the supported 0–10 range.`,
             location: { x, y },
             severity: "error",
           });

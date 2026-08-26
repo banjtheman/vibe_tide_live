@@ -52,8 +52,8 @@ Paint one tile manually, use agent undo, and call `create_share_link`. End on: �
 
 - Core state, generation, validation, persistence, undo, codec, and telemetry
 - Nine WebMCP tools with schemas, runtime guards, cancellation, and browser verification
-- Playable Phaser runtime and responsive workbench
-- Original branded coast and headphone otter assets
+- Playable Phaser runtime, three distinct enemy families, and responsive player-first UI
+- Original branded coast and an animated eight-frame version of the upright V1 headphone otter
 - Manual paint → shared revision → agent inspection/undo round trip
 - Automated type, core, geometry, and WebMCP tests
 

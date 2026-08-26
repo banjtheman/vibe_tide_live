@@ -11,11 +11,14 @@ VibeTide Live keeps the original project’s ocean-and-music identity, but moves
 
 ## Generated source assets
 
-The two source PNGs in `art/source/` were generated with OpenAI ImageGen on August 26, 2026 for this repository:
+The source PNGs in `art/source/` were generated with OpenAI ImageGen on August 26, 2026 for this repository:
 
 - `vibetide-background.png` — original wide tropical shoreline, with no borrowed characters, logos, or platform elements
-- `vibetide-otter.png` — original right-facing river otter with coral/teal headphones, informed by a screenshot from the user’s earlier VibeTide iteration and redrawn in the new painted style
+- `vibetide-otter.png` — the first new painted otter exploration, retained as a fallback asset
+- `vibetide-otter-v1-atlas.png` — the production identity-preserving animation source, based on the original upright V1 otter and its purple headphones with cyan inner rings
 
-The runtime WebP files in `public/assets/` are optimized derivatives. The otter source received a technical alpha cleanup after generation so the browser sprite has a true transparent background.
+The primary runtime atlas in `public/assets/vibetide-otter-v1-atlas.png` contains two idle frames, four run frames, one jump frame, and one fall frame. ImageGen performed the character-preserving redraw and alpha extraction; a deterministic post-process isolated the eight connected sprites, centered them in equal 444 × 444 cells, and aligned them to one baseline. The exact generation brief and references are recorded beside the source atlas.
+
+Enemy art is drawn procedurally in Phaser so crawlers, flyers, spitters, and projectiles remain crisp, lightweight, and original at every scale.
 
 No old Unity package, Corgi Engine asset, or third-party game art is included.

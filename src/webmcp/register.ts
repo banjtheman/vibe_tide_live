@@ -84,7 +84,7 @@ function inspectResult(snapshot: StudioSnapshot): string {
     mode: snapshot.mode,
     can_undo: snapshot.canUndo,
     validation: compactValidation(snapshot.validation),
-    tile_rows_top_to_bottom: level.tiles.map((row) => row.join("")),
+    tile_rows_top_to_bottom: level.tiles.map((row) => [...row]),
   });
 }
 
@@ -125,7 +125,7 @@ function makeTools(
       name: "inspect_level",
       title: "Inspect VibeTide level",
       description:
-        "Read the current level grid, metadata, revision, mode, and validation state. Tile rows are top-to-bottom digits using tile IDs 0 through 7.",
+        "Read the current level grid, metadata, revision, mode, and validation state. Tile rows are top-to-bottom integer arrays using tile IDs 0 through 10; 8 places a reef crawler, 9 a flying swell-wing, and 10 a ranged tide-spitter.",
       inputSchema: EMPTY_INPUT_SCHEMA,
       annotations: { readOnlyHint: true, untrustedContentHint: true },
       execute: async (input, options) => {

@@ -61,6 +61,69 @@ function makeRandom(seed: number): () => number {
   };
 }
 
+function placeEnemyMarkers(
+  tiles: TileId[][],
+  width: number,
+  height: number,
+  difficulty: Difficulty,
+): void {
+  const desiredCount = difficulty === "beginner" ? 3 : difficulty === "moderate" ? 5 : 7;
+  const candidates: Array<{ x: number; y: number }> = [];
+  const isSupport = (tile: TileId | undefined): boolean => tile === 1 || tile === 2 || tile === 4;
+  const isHazard = (tile: TileId | undefined): boolean => tile === 5 || tile === 6 || tile === 7;
+
+  // One candidate per column keeps encounter spacing predictable even on
+  // stairs and stacked decorative platforms.
+  for (let x = 6; x <= width - 5; x += 1) {
+    for (let y = height - 2; y >= 1; y -= 1) {
+      if (
+        tiles[y]?.[x] === 0 &&
+        isSupport(tiles[y + 1]?.[x]) &&
+        !isHazard(tiles[y]?.[x - 1]) &&
+        !isHazard(tiles[y]?.[x + 1])
+      ) {
+        candidates.push({ x, y });
+        break;
+      }
+    }
+  }
+
+  const selected: Array<{ x: number; y: number }> = [];
+  const count = Math.min(desiredCount, candidates.length);
+  for (let index = 0; index < count; index += 1) {
+    const targetX = Math.round(((index + 1) * (width - 1)) / (count + 1));
+    const available = candidates
+      .filter(
+        (candidate) =>
+          !selected.some((placed) => placed.x === candidate.x) &&
+          !selected.some((placed) => Math.abs(placed.x - candidate.x) < 3),
+      )
+      .sort((left, right) => Math.abs(left.x - targetX) - Math.abs(right.x - targetX) || left.x - right.x);
+    const candidate = available[0] ?? candidates.find(
+      (option) => !selected.some((placed) => placed.x === option.x),
+    );
+    if (candidate) {
+      selected.push(candidate);
+    }
+  }
+  selected.sort((left, right) => left.x - right.x);
+
+  const markerSequence = [8, 9, 10] as const;
+  for (let index = 0; index < selected.length; index += 1) {
+    const anchor = selected[index]!;
+    const marker = markerSequence[index % markerSequence.length]!;
+    let markerY = anchor.y;
+    if (marker === 9) {
+      if (anchor.y >= 2 && tiles[anchor.y - 2]?.[anchor.x] === 0) {
+        markerY = anchor.y - 2;
+      } else if (tiles[anchor.y - 1]?.[anchor.x] === 0) {
+        markerY = anchor.y - 1;
+      }
+    }
+    tiles[markerY]![anchor.x] = marker;
+  }
+}
+
 function defaultSections(mechanic: PrimaryMechanic, difficulty: Difficulty): LevelSectionSpec[] {
   const intensity: 1 | 2 | 3 = difficulty === "beginner" ? 1 : difficulty === "moderate" ? 2 : 3;
   switch (mechanic) {
@@ -288,6 +351,7 @@ export function generateLevel(blueprint: LevelBlueprint, options: GenerateLevelO
   setSurface(goalX, walkY, 1);
   setSurface(normalized.width - 1, walkY, 1);
   tiles[walkY]![goalX] = 3;
+  placeEnemyMarkers(tiles, normalized.width, normalized.height, normalized.difficulty);
 
   const timestamp = options.now ?? DETERMINISTIC_TIMESTAMP;
   const generated: LevelDocument = {

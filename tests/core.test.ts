@@ -90,6 +90,25 @@ describe("deterministic level generator", () => {
     }
   });
 
+  it("seeds deterministic enemy markers with difficulty-scaled encounter counts", () => {
+    const expectedCounts = { beginner: 3, moderate: 5, tricky: 7 } as const;
+    for (const difficulty of ["beginner", "moderate", "tricky"] as const) {
+      const level = generateLevel({
+        name: `enemy-${difficulty}`,
+        width: 48,
+        height: 18,
+        difficulty,
+        primaryMechanic: "platforming",
+        seed: 17,
+      });
+      const markers = level.tiles.flat().filter((tile) => tile === 8 || tile === 9 || tile === 10);
+
+      expect(markers).toHaveLength(expectedCounts[difficulty]);
+      expect(new Set(markers)).toEqual(new Set([8, 9, 10]));
+      expect(validateLevel(level).valid).toBe(true);
+    }
+  });
+
   it("clamps creation dimensions and normalizes oversized section totals", () => {
     const level = generateLevel({
       name: "Bounds",

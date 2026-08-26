@@ -34,8 +34,11 @@ The app treats execution options defensively because early host implementations 
 | `5` | hot vent | hazard |
 | `6` | coral spikes | hazard |
 | `7` | deep water | hazard |
+| `8` | reef crawler | passable enemy spawn; ground patrol |
+| `9` | swell-wing | passable enemy spawn; flying patrol |
+| `10` | tide-spitter | passable enemy spawn; ranged attack |
 
-Coordinates start at `(0, 0)` in the top-left. Tile rows returned by `inspect_level` are top-to-bottom strings, which makes exact inspection compact and deterministic.
+Coordinates start at `(0, 0)` in the top-left. Tile rows returned by `inspect_level` are top-to-bottom integer arrays, which keeps enemy markers and exact edits compact and deterministic.
 
 ## Local test harness
 

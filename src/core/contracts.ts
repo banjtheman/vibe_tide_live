@@ -1,6 +1,6 @@
 export const LEVEL_SCHEMA_VERSION = 1 as const;
 
-export const TILE_IDS = [0, 1, 2, 3, 4, 5, 6, 7] as const;
+export const TILE_IDS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 export type TileId = (typeof TILE_IDS)[number];
 
 export const TILE_DEFINITIONS = {
@@ -12,6 +12,9 @@ export const TILE_DEFINITIONS = {
   5: { name: "hot vent", behavior: "hazard" },
   6: { name: "coral spikes", behavior: "hazard" },
   7: { name: "deep water", behavior: "hazard" },
+  8: { name: "reef crawler", behavior: "enemy" },
+  9: { name: "swell-wing", behavior: "enemy" },
+  10: { name: "tide-spitter", behavior: "enemy" },
 } as const satisfies Record<TileId, { name: string; behavior: string }>;
 
 export type Difficulty = "beginner" | "moderate" | "tricky";

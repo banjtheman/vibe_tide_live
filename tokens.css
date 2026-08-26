@@ -1,4 +1,4 @@
-/* Hallmark · macrostructure: Workbench · tone: playful · anchor hue: warm coral · genre: playful · theme: Plume · enrichment: Tier C OpenAI ImageGen + post-processed · pre-emit critique: P5 H5 E5 S5 R4 V5 · contrast: pass (46–50) · nav: N7 · footer: Ft8 · slop: pass (51–55) · honest: pass (56) · chrome: pass (57) · tokens: pass (58) · responsive: pass (59) · icons: pass (60) · mobile: pass (36, 59, 61–69) */
+/* Hallmark · macrostructure: Map/Diagram · tone: playful · anchor hue: warm coral · genre: playful · theme: Plume · enrichment: Tier C OpenAI ImageGen + post-processed V1 otter atlas · pre-emit critique: P5 H5 E5 S5 R4 V5 · contrast: pass (46–50) · nav: N7 · footer: none (app surface) · slop: pass (51–55) · honest: pass (56) · chrome: pass (57) · tokens: pass (58) · responsive: pass (59) · icons: pass (60) · mobile: pass (36, 59, 61–69) */
 
 :root {
   color-scheme: light;
@@ -19,11 +19,22 @@
   --color-sea: oklch(70% 0.105 188);
   --color-sea-deep: oklch(42% 0.09 211);
   --color-sea-ink: oklch(24% 0.065 211);
+  --color-sky-cell: oklch(85% 0.072 205);
+  --color-sky-cell-2: oklch(91% 0.052 194);
+  --color-sky-grid: oklch(72% 0.05 205);
+  --color-grid-line: oklch(27% 0.052 215);
+  --color-stage-editor: oklch(26% 0.06 215);
   --color-dune: oklch(77% 0.11 84);
   --color-dune-dark: oklch(57% 0.105 74);
+  --color-dune-light: oklch(88% 0.08 86);
   --color-coral: oklch(66% 0.17 30);
   --color-coral-dark: oklch(48% 0.145 27);
   --color-violet: oklch(55% 0.11 303);
+  --color-violet-dark: oklch(36% 0.1 298);
+  --color-enemy-crawler: oklch(52% 0.18 35);
+  --color-enemy-winged: oklch(48% 0.14 305);
+  --color-enemy-spitter: oklch(48% 0.13 157);
+  --color-sun-wash: oklch(89% 0.075 55);
   --color-success: oklch(61% 0.12 155);
   --color-warning: oklch(73% 0.14 77);
   --color-error: oklch(55% 0.18 26);
@@ -32,6 +43,7 @@
   --color-black-alpha: oklch(8% 0.02 250 / 0.74);
   --color-ink-alpha: oklch(22% 0.015 50 / 0.12);
   --color-paper-alpha: oklch(96% 0.02 70 / 0.88);
+  --color-paper-alpha-soft: oklch(96% 0.02 70 / 0.44);
   --color-focus-alpha: oklch(68% 0.13 18 / 0.24);
   --color-stage-overlay: oklch(8% 0.02 250 / 0.42);
 
@@ -73,8 +85,7 @@
   --shadow-float: 0 18px 48px -18px oklch(22% 0.06 50 / 0.32);
   --shadow-inset: inset 0 0 0 1px oklch(100% 0 0 / 0.24);
 
-  --header-height: 4.25rem;
-  --status-height: 2.1rem;
+  --header-height: 4.75rem;
   --rail-width: 17.5rem;
   --control-height: 2.75rem;
   --cell-size: 1.55rem;

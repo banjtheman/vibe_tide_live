@@ -211,7 +211,7 @@ function parsePatchOperation(
 
   if (kind === "set_tile") {
     exactKeys(value, ["kind", "x", "y", "tile"], toolName);
-    const tile = integerValue(required(value, "tile", toolName), `${prefix}.tile`, toolName, 0, 7);
+    const tile = integerValue(required(value, "tile", toolName), `${prefix}.tile`, toolName, 0, 10);
     if (!TILE_IDS.includes(tile as TileId)) {
       throw new WebMCPInputError(toolName, `${prefix}.tile is not a known tile`);
     }
@@ -261,7 +261,7 @@ function parsePatchOperation(
     levelHeight - y,
   );
   if (kind === "fill_rect") {
-    const tile = integerValue(required(value, "tile", toolName), `${prefix}.tile`, toolName, 0, 7);
+    const tile = integerValue(required(value, "tile", toolName), `${prefix}.tile`, toolName, 0, 10);
     return { kind, x, y, width, height, tile: tile as TileId };
   }
   return { kind, x, y, width, height };

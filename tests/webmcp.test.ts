@@ -218,7 +218,12 @@ describe("registerVibeTideTools", () => {
 
     const output = JSON.parse(await modelContext.invoke("inspect_level")) as Record<string, unknown>;
     expect(output.revision).toBe(3);
-    expect(output.tile_rows_top_to_bottom).toEqual(["000000", "000000", "000030", "111111"]);
+    expect(output.tile_rows_top_to_bottom).toEqual([
+      [0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 3, 0],
+      [1, 1, 1, 1, 1, 1],
+    ]);
     await expect(modelContext.invoke("inspect_level", { surprise: true })).rejects.toBeInstanceOf(
       WebMCPInputError,
     );
@@ -276,6 +281,7 @@ describe("registerVibeTideTools", () => {
     await modelContext.invoke("apply_level_patch", {
       operations: [
         { kind: "set_tile", x: 2, y: 1, tile: 4 },
+        { kind: "set_tile", x: 4, y: 1, tile: 10 },
         { kind: "platform", x: 1, y: 2, length: 4, tile: 2 },
       ],
       reason: "Ease the central jump",
@@ -284,6 +290,7 @@ describe("registerVibeTideTools", () => {
     expect(store.lastPatch).toEqual({
       operations: [
         { kind: "set_tile", x: 2, y: 1, tile: 4 },
+        { kind: "set_tile", x: 4, y: 1, tile: 10 },
         { kind: "platform", x: 1, y: 2, length: 4, tile: 2 },
       ],
       reason: "Ease the central jump",
