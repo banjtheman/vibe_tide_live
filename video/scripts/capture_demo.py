@@ -63,6 +63,22 @@ BLUEPRINT: dict[str, Any] = {
     ],
 }
 
+CLEAN_GAMEPLAY_BLUEPRINT: dict[str, Any] = {
+    "name": "Golden Coast Dash",
+    "description": "A clean showcase run with enemies visible above a safe main route.",
+    "width": 80,
+    "height": 18,
+    "difficulty": "beginner",
+    "primary_mechanic": "platforming",
+    "background": "golden-coast",
+    "seed": 20260826,
+    "sections": [
+        {"kind": "run", "length": 36, "intensity": 1},
+        {"kind": "run", "length": 36, "intensity": 1},
+        {"kind": "finish", "length": 8, "intensity": 1},
+    ],
+}
+
 
 def run(command: list[str]) -> str:
     result = subprocess.run(command, check=True, capture_output=True, text=True)
@@ -100,6 +116,7 @@ def wait_until_ready(page: Page) -> None:
     page.goto(BASE_URL, wait_until="networkidle")
     page.wait_for_function("Object.keys(window.__vtTools || {}).length === 10")
     page.wait_for_selector("[data-stage]")
+    page.wait_for_selector("canvas", state="attached")
     page.wait_for_timeout(900)
 
 
@@ -110,6 +127,54 @@ def create_sunset_circuit(page: Page) -> None:
     validation = json.loads(invoke(page, "validate_level"))
     if not validation.get("valid"):
         raise RuntimeError(f"Generated level is invalid: {validation}")
+
+
+def create_clean_gameplay_level(page: Page) -> None:
+    result = invoke(page, "create_level_from_blueprint", CLEAN_GAMEPLAY_BLUEPRINT)
+    if "Created level" not in result:
+        raise RuntimeError(f"Unexpected clean gameplay create result: {result}")
+
+    patch_result = invoke(
+        page,
+        "apply_level_patch",
+        {
+            "reason": "Shape a safe showcase lane with visible enemies above the route.",
+            "operations": [
+                {"kind": "clear_rect", "x": 0, "y": 0, "width": 80, "height": 18},
+                {"kind": "fill_rect", "x": 0, "y": 15, "width": 80, "height": 3, "tile": 2},
+                {"kind": "platform", "x": 0, "y": 15, "length": 80, "tile": 1},
+                {"kind": "move_goal", "x": 77, "y": 14},
+                {"kind": "platform", "x": 9, "y": 11, "length": 9, "tile": 2},
+                {"kind": "set_tile", "x": 13, "y": 10, "tile": 8},
+                {"kind": "platform", "x": 29, "y": 11, "length": 7, "tile": 4},
+                {"kind": "set_tile", "x": 32, "y": 10, "tile": 10},
+                {"kind": "platform", "x": 47, "y": 11, "length": 7, "tile": 2},
+                {"kind": "set_tile", "x": 50, "y": 9, "tile": 9},
+            ],
+        },
+    )
+    if "Applied patch" not in patch_result:
+        raise RuntimeError(f"Unexpected clean gameplay patch result: {patch_result}")
+
+    validation = json.loads(invoke(page, "validate_level"))
+    if not validation.get("valid"):
+        raise RuntimeError(f"Clean gameplay level is invalid: {validation}")
+
+
+def start_stable_playtest(page: Page) -> None:
+    """Enter play after Phaser is mounted, retrying one transient mode restart."""
+    page.wait_for_function(
+        """() => {
+          const canvas = document.querySelector('canvas');
+          return canvas && canvas.width > 0 && canvas.height > 0;
+        }"""
+    )
+    for _ in range(2):
+        invoke(page, "start_playtest")
+        page.wait_for_timeout(900)
+        if page.locator("[data-stage]").get_attribute("data-mode") == "play":
+            return
+    raise RuntimeError("Playtest did not remain in play mode after Phaser mounted.")
 
 
 def drive_otter(page: Page, *, seconds: float, jump: bool) -> None:
@@ -124,6 +189,39 @@ def drive_otter(page: Page, *, seconds: float, jump: bool) -> None:
             next_jump = now + 1.15
         page.wait_for_timeout(90)
     page.keyboard.up("ArrowRight")
+
+
+def drive_until_first_death(page: Page, *, timeout_seconds: float = 7.0) -> dict[str, Any]:
+    """Record exactly one intentional trouble spot, then release movement."""
+    page.evaluate("document.querySelector('canvas')?.focus()")
+    deadline = time.monotonic() + timeout_seconds
+    page.keyboard.down("ArrowRight")
+    try:
+        while time.monotonic() < deadline:
+            page.wait_for_timeout(90)
+            report = json.loads(invoke(page, "get_playtest_report"))
+            if report.get("deaths", 0) >= 1:
+                return report
+    finally:
+        page.keyboard.up("ArrowRight")
+    raise RuntimeError("The playtest route did not produce its single intended death.")
+
+
+def drive_clean_showcase_run(page: Page) -> None:
+    """Complete the curated lane with genuine keyboard movement and jumps."""
+    # Phaser listens on the page keyboard manager. Focusing directly avoids
+    # Playwright rejecting an otherwise usable canvas while its responsive
+    # container is settling after the 80-column level restart.
+    page.evaluate("document.querySelector('canvas')?.focus()")
+    for index, move_ms in enumerate((3_100, 3_100, 3_100, 3_300)):
+        page.keyboard.down("ArrowRight")
+        page.wait_for_timeout(600)
+        page.keyboard.press("Space")
+        page.wait_for_timeout(move_ms - 600)
+        page.keyboard.up("ArrowRight")
+        if index < 3:
+            page.wait_for_timeout(1_200)
+    page.wait_for_timeout(3_600)
 
 
 def capture_clip(
@@ -153,14 +251,19 @@ def capture_clip(
     def mark(label: str) -> None:
         markers[label] = round(time.monotonic() - started, 3)
 
-    wait_until_ready(page)
-    mark("ready")
-    action(page, mark)
-    page.screenshot(path=str(CAPTURE_ROOT / f"{name}-final.png"))
     video = page.video
     if video is None:
         raise RuntimeError(f"Playwright did not create video for {name}")
-    context.close()
+    try:
+        wait_until_ready(page)
+        mark("ready")
+        action(page, mark)
+        page.screenshot(path=str(CAPTURE_ROOT / f"{name}-final.png"))
+    except Exception:
+        page.screenshot(path=str(CAPTURE_ROOT / f"{name}-failed.png"))
+        raise
+    finally:
+        context.close()
 
     raw_path = take_dir / f"{name}.webm"
     video.save_as(str(raw_path))
@@ -252,7 +355,10 @@ def agent_loop(page: Page, mark: Callable[[str], None]) -> None:
     mark("play")
     invoke(page, "start_playtest")
     page.wait_for_timeout(1100)
-    drive_otter(page, seconds=6.8, jump=False)
+    report = drive_until_first_death(page)
+    if report.get("deaths") != 1:
+        raise RuntimeError(f"Expected one intentional playtest death: {report}")
+    page.wait_for_timeout(800)
     mark("report")
     report_text = invoke(page, "get_playtest_report")
     report = json.loads(report_text) if report_text.startswith("{") else {}
@@ -279,16 +385,20 @@ def agent_loop(page: Page, mark: Callable[[str], None]) -> None:
     validation = json.loads(invoke(page, "validate_level"))
     if not validation.get("valid"):
         raise RuntimeError(f"Repaired level is invalid: {validation}")
-    page.wait_for_timeout(1600)
+    page.wait_for_timeout(9200)
 
 
 def gameplay(page: Page, mark: Callable[[str], None]) -> None:
-    create_sunset_circuit(page)
-    invoke(page, "start_playtest")
-    page.wait_for_timeout(1200)
+    create_clean_gameplay_level(page)
+    start_stable_playtest(page)
+    page.wait_for_timeout(300)
     mark("gameplay")
-    drive_otter(page, seconds=10.5, jump=True)
-    page.wait_for_timeout(900)
+    drive_clean_showcase_run(page)
+    report_text = invoke(page, "get_playtest_report")
+    report = json.loads(report_text)
+    print(f"Clean gameplay telemetry: {json.dumps(report)}", flush=True)
+    if not report.get("completed") or report.get("deaths") != 0:
+        raise RuntimeError(f"Clean gameplay take failed telemetry: {report}")
 
 
 def share_roundtrip(page: Page, mark: Callable[[str], None]) -> None:
@@ -307,19 +417,27 @@ def share_roundtrip(page: Page, mark: Callable[[str], None]) -> None:
 
 
 def mobile_play(page: Page, mark: Callable[[str], None]) -> None:
-    create_sunset_circuit(page)
-    invoke(page, "start_playtest")
-    page.wait_for_timeout(1000)
+    create_clean_gameplay_level(page)
+    start_stable_playtest(page)
+    page.wait_for_timeout(300)
     mark("mobile_play")
     right = page.locator('[data-control="right"]')
     jump = page.locator('[data-control="jump"]')
     right.dispatch_event("pointerdown", {"pointerId": 1, "button": 0})
-    for _ in range(5):
-        page.wait_for_timeout(650)
+    for delay_ms in (1_300, 3_000, 3_000, 3_000):
+        page.wait_for_timeout(delay_ms)
         jump.dispatch_event("pointerdown", {"pointerId": 2, "button": 0})
         jump.dispatch_event("pointerup", {"pointerId": 2, "button": 0})
+    page.wait_for_timeout(1_200)
     right.dispatch_event("pointerup", {"pointerId": 1, "button": 0})
-    page.wait_for_timeout(1000)
+    page.wait_for_timeout(4_600)
+    report_text = invoke(page, "get_playtest_report")
+    report = json.loads(report_text)
+    print(f"Clean mobile telemetry: {json.dumps(report)}", flush=True)
+    if report.get("deaths") != 0 or any(
+        event.get("type") == "death" for event in report.get("recent_events", [])
+    ):
+        raise RuntimeError(f"Clean mobile take failed telemetry: {report}")
 
 
 def write_manifest(captures: dict[str, dict[str, Any]]) -> None:
@@ -344,18 +462,33 @@ def main() -> None:
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(**launch_options)
         try:
-            captures = {
-                "humanBuild": capture_clip(browser, "human-build", human_build),
-                "agentLoop": capture_clip(browser, "agent-loop", agent_loop),
-                "gameplay": capture_clip(browser, "gameplay", gameplay),
-                "share": capture_clip(browser, "share-roundtrip", share_roundtrip),
-                "mobile": capture_clip(
+            capture_jobs: dict[str, Callable[[], dict[str, Any]]] = {
+                "humanBuild": lambda: capture_clip(browser, "human-build", human_build),
+                "agentLoop": lambda: capture_clip(browser, "agent-loop", agent_loop),
+                "gameplay": lambda: capture_clip(browser, "gameplay", gameplay),
+                "share": lambda: capture_clip(browser, "share-roundtrip", share_roundtrip),
+                "mobile": lambda: capture_clip(
                     browser,
                     "mobile-play",
                     mobile_play,
                     viewport=(540, 960),
                 ),
             }
+            capture_only = os.environ.get("VIBETIDE_CAPTURE_ONLY")
+            if capture_only and capture_only not in capture_jobs:
+                choices = ", ".join(capture_jobs)
+                raise RuntimeError(f"Unknown VIBETIDE_CAPTURE_ONLY={capture_only!r}; choose {choices}")
+
+            if capture_only:
+                manifest_path = CAPTURE_ROOT / "manifest.json"
+                captures = (
+                    json.loads(manifest_path.read_text(encoding="utf-8"))
+                    if manifest_path.exists()
+                    else {}
+                )
+                captures[capture_only] = capture_jobs[capture_only]()
+            else:
+                captures = {name: capture() for name, capture in capture_jobs.items()}
         finally:
             browser.close()
 

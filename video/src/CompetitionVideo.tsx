@@ -185,6 +185,7 @@ const PlayScene: React.FC = () => {
       <ChromeFrame
         file={CAPTURE_MANIFEST.gameplay.file}
         startAtSeconds={CAPTURE_MANIFEST.gameplay.markers.gameplay}
+        loop={false}
         style={{left: 72, top: 180, width: 1370, height: 782}}
         badge={
           <Pill accent="cyan" active>
@@ -222,7 +223,7 @@ const PlayScene: React.FC = () => {
         <Video
           src={staticFile(CAPTURE_MANIFEST.mobile.file)}
           muted
-          loop
+          loop={false}
           objectFit="cover"
           trimBefore={Math.round(CAPTURE_MANIFEST.mobile.markers.mobile_play * 30)}
           style={{
@@ -523,6 +524,7 @@ const PlaytestScene: React.FC = () => {
       <ChromeFrame
         file={CAPTURE_MANIFEST.agentLoop.file}
         startAtSeconds={CAPTURE_MANIFEST.agentLoop.markers.play}
+        loop={false}
         style={{left: 70, top: 188, width: 1470, height: 820}}
         badge={
           <Pill accent="gold" active>
@@ -544,7 +546,7 @@ const PlaytestScene: React.FC = () => {
         }}
       >
         {[
-          {value: "5", label: "deaths captured"},
+          {value: "1", label: "trouble spot found"},
           {value: "1", label: "targeted patch"},
           {value: "✓", label: "route valid"},
         ].map((metric) => (

@@ -17,27 +17,27 @@ export const CAPTURE_MANIFEST = {
     "file": "captures/agent-loop.mp4",
     "width": 1920,
     "height": 1080,
-    "durationSeconds": 25.633,
+    "durationSeconds": 28.667,
     "markers": {
-      "ready": 1.745,
-      "prompt": 2.749,
-      "create": 4.452,
-      "patch": 7.068,
-      "validate": 9.179,
-      "play": 10.685,
-      "report": 18.711,
-      "repair": 20.846,
-      "revalidate": 23.057
+      "ready": 1.926,
+      "prompt": 2.929,
+      "create": 4.632,
+      "patch": 7.244,
+      "validate": 9.352,
+      "play": 10.857,
+      "report": 14.08,
+      "repair": 16.221,
+      "revalidate": 18.427
     }
   },
   "gameplay": {
     "file": "captures/gameplay.mp4",
     "width": 1920,
     "height": 1080,
-    "durationSeconds": 15.6,
+    "durationSeconds": 23.967,
     "markers": {
-      "ready": 1.765,
-      "gameplay": 2.978
+      "ready": 1.918,
+      "gameplay": 3.153
     }
   },
   "share": {
@@ -56,10 +56,10 @@ export const CAPTURE_MANIFEST = {
     "file": "captures/mobile-play.mp4",
     "width": 540,
     "height": 960,
-    "durationSeconds": 8.067,
+    "durationSeconds": 20.333,
     "markers": {
-      "ready": 1.769,
-      "mobile_play": 2.786
+      "ready": 1.933,
+      "mobile_play": 3.178
     }
   }
 } as const;
