@@ -507,10 +507,12 @@ export class LevelStore implements StudioStore {
     height: number,
     source: "human" | "agent" = "human",
   ): MutationResult {
+    const widthChanges = width !== this.level.width;
+    const heightChanges = height !== this.level.height;
     if (
       !Number.isInteger(width) ||
-      width < LEVEL_SIZE_LIMITS.minWidth ||
-      width > LEVEL_SIZE_LIMITS.maxWidth
+      (widthChanges &&
+        (width < LEVEL_SIZE_LIMITS.minWidth || width > LEVEL_SIZE_LIMITS.maxWidth))
     ) {
       return this.noChange(
         `Level length must be a whole number from ${LEVEL_SIZE_LIMITS.minWidth} to ${LEVEL_SIZE_LIMITS.maxWidth}.`,
@@ -519,15 +521,15 @@ export class LevelStore implements StudioStore {
     }
     if (
       !Number.isInteger(height) ||
-      height < LEVEL_SIZE_LIMITS.minHeight ||
-      height > LEVEL_SIZE_LIMITS.maxHeight
+      (heightChanges &&
+        (height < LEVEL_SIZE_LIMITS.minHeight || height > LEVEL_SIZE_LIMITS.maxHeight))
     ) {
       return this.noChange(
         `Level height must be a whole number from ${LEVEL_SIZE_LIMITS.minHeight} to ${LEVEL_SIZE_LIMITS.maxHeight}.`,
         false,
       );
     }
-    if (width === this.level.width && height === this.level.height) {
+    if (!widthChanges && !heightChanges) {
       return this.noChange("Level size already matches.", true);
     }
 
@@ -583,6 +585,13 @@ export class LevelStore implements StudioStore {
       relocateGoalToReachableLanding(
         next,
         Math.max(0, Math.min(height - 2, transformedGoalY)),
+      );
+    }
+
+    if (this.validation.valid && !validateLevel(next).valid) {
+      return this.noChange(
+        "That size would cut away the playable route. Move the route lower or farther left, then resize again.",
+        false,
       );
     }
 

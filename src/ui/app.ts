@@ -185,15 +185,15 @@ export function mountStudioUI(
                 <div class="level-size__fields">
                   <label class="field">
                     <span class="field-label">Length</span>
-                    <input data-field="width" type="number" min="${LEVEL_SIZE_LIMITS.minWidth}" max="${LEVEL_SIZE_LIMITS.maxWidth}" step="1" inputmode="numeric" aria-describedby="level-size-help" required />
+                    <input data-field="width" type="number" min="${LEVEL_SIZE_LIMITS.minWidth}" max="${LEVEL_SIZE_LIMITS.maxWidth}" step="1" inputmode="numeric" aria-describedby="level-size-help level-size-warning" required />
                   </label>
                   <label class="field">
                     <span class="field-label">Height</span>
-                    <input data-field="height" type="number" min="${LEVEL_SIZE_LIMITS.minHeight}" max="${LEVEL_SIZE_LIMITS.maxHeight}" step="1" inputmode="numeric" aria-describedby="level-size-help" required />
+                    <input data-field="height" type="number" min="${LEVEL_SIZE_LIMITS.minHeight}" max="${LEVEL_SIZE_LIMITS.maxHeight}" step="1" inputmode="numeric" aria-describedby="level-size-help level-size-warning" required />
                   </label>
                 </div>
                 <p class="level-size__help" id="level-size-help">${LEVEL_SIZE_LIMITS.minWidth}–${LEVEL_SIZE_LIMITS.maxWidth} tiles long · ${LEVEL_SIZE_LIMITS.minHeight}–${LEVEL_SIZE_LIMITS.maxHeight} tiles tall</p>
-                <p class="level-size__warning" data-size-warning aria-live="polite"></p>
+                <p class="level-size__warning" id="level-size-warning" data-size-warning aria-live="polite"></p>
                 <button class="button button--sea button--wide" data-size-submit type="submit">Resize level</button>
               </fieldset>
             </form>
@@ -429,9 +429,11 @@ export function mountStudioUI(
     sizePresetButtons.forEach((button) => {
       button.setAttribute("aria-pressed", String(Number(button.dataset.sizePreset) === requestedWidth));
     });
-    sizeSubmit.disabled = !dimensionsAreValid || isUnchanged;
+    sizeSubmit.disabled = dimensionsAreValid && isUnchanged;
     sizeSubmit.textContent = trimsRight || trimsSky ? "Trim & resize" : "Resize level";
-    if (trimsRight && trimsSky) {
+    if (!dimensionsAreValid) {
+      sizeWarning.textContent = `Use whole numbers from ${LEVEL_SIZE_LIMITS.minWidth}–${LEVEL_SIZE_LIMITS.maxWidth} long and ${LEVEL_SIZE_LIMITS.minHeight}–${LEVEL_SIZE_LIMITS.maxHeight} tall.`;
+    } else if (trimsRight && trimsSky) {
       sizeWarning.textContent = "This trims the far right and top. Undo restores every removed piece.";
     } else if (trimsRight) {
       sizeWarning.textContent = "This trims the far right. Undo restores every removed piece.";

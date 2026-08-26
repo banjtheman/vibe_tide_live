@@ -6,6 +6,7 @@ import {
   WebMCPInputError,
   type WebMCPModelContext,
 } from "../src/webmcp";
+import { LevelStore } from "../src/core";
 import type {
   LevelBlueprint,
   LevelDocument,
@@ -329,6 +330,27 @@ describe("registerVibeTideTools", () => {
     await expect(modelContext.invoke("resize_level", { height: 18, anchor: "center" })).rejects.toThrow(
       "unexpected field",
     );
+  });
+
+  it("keeps an omitted legacy dimension while normalizing the supplied one", async () => {
+    const legacy: LevelDocument = {
+      ...initialLevel(),
+      width: 100,
+      height: 40,
+      tiles: Array.from({ length: 40 }, () => Array.from({ length: 100 }, () => 0 as const)),
+    };
+    for (let x = 0; x < legacy.width; x += 1) legacy.tiles[37]![x] = 1;
+    legacy.tiles[36]![98] = 3;
+    const store = new LevelStore({ initialLevel: legacy, storage: null });
+    const modelContext = new InMemoryModelContext();
+    installModelContext(modelContext);
+    await registerVibeTideTools(store);
+
+    const output = await modelContext.invoke("resize_level", { width: 80 });
+
+    expect(output).toContain("Resized level to 80 × 40");
+    expect(store.getSnapshot().level).toMatchObject({ width: 80, height: 40 });
+    expect(store.getSnapshot().validation.valid).toBe(true);
   });
 
   it("validates patch bounds and sends one atomic operation batch", async () => {

@@ -435,6 +435,42 @@ describe("LevelStore transactions, history, and persistence", () => {
     expect(store.getSnapshot().canUndo).toBe(false);
   });
 
+  it("rejects a resize that would make a previously playable route unplayable", () => {
+    const highRoute = generateLevel({ name: "High route", width: 48, height: 32 });
+    highRoute.tiles = Array.from({ length: 32 }, () => Array(48).fill(0));
+    for (let x = 0; x < highRoute.width; x += 1) {
+      highRoute.tiles[6]![x] = 1;
+    }
+    highRoute.tiles[5]![46] = 3;
+    expect(validateLevel(highRoute).valid).toBe(true);
+    const store = new LevelStore({ initialLevel: highRoute, storage: null, now: tickingClock() });
+    const before = store.exportProject();
+
+    const result = store.resizeLevel(20, 10);
+
+    expect(result.ok).toBe(false);
+    expect(result.summary).toContain("cut away the playable route");
+    expect(store.exportProject()).toEqual(before);
+    expect(store.getSnapshot().canUndo).toBe(false);
+  });
+
+  it("allows an unchanged legacy dimension while the other dimension is normalized", () => {
+    const legacy = generateLevel({ name: "Legacy size", width: 80, height: 32 });
+    legacy.width = 100;
+    legacy.height = 40;
+    legacy.tiles = Array.from({ length: 40 }, () => Array(100).fill(0));
+    for (let x = 0; x < legacy.width; x += 1) legacy.tiles[37]![x] = 1;
+    legacy.tiles[36]![98] = 3;
+    expect(validateLevel(legacy).valid).toBe(true);
+    const store = new LevelStore({ initialLevel: legacy, storage: null, now: tickingClock() });
+
+    expect(store.resizeLevel(80, 40, "agent").ok).toBe(true);
+    expect(store.getSnapshot().level).toMatchObject({ width: 80, height: 40 });
+    expect(store.resizeLevel(80, 32, "agent").ok).toBe(true);
+    expect(store.getSnapshot().level).toMatchObject({ width: 80, height: 32 });
+    expect(store.getSnapshot().validation.valid).toBe(true);
+  });
+
   it("bounds history and metadata/activity text", () => {
     const store = new LevelStore({ storage: null, now: tickingClock(), historyLimit: 2, activityLimit: 2 });
     store.setMetadata({ name: "One" }, "human");
