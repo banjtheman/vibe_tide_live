@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   aimedProjectileVelocity,
   alignSpriteFeetToSurface,
+  cameraFollowProfile,
 } from "../src/game/runtimeMath";
 
 describe("runtime geometry", () => {
@@ -24,5 +25,26 @@ describe("runtime geometry", () => {
     expect(velocity.x).toBeLessThan(-300);
     expect(velocity.y).toBeGreaterThan(0);
     expect(velocity.y).toBeLessThan(120);
+  });
+
+  it("uses a tall, slow camera safe area for portrait mobile play", () => {
+    const profile = cameraFollowProfile(390, 430);
+
+    expect(profile.calmPortrait).toBe(true);
+    expect(profile.deadzoneWidth).toBe(195);
+    expect(profile.deadzoneHeight).toBe(292);
+    expect(profile.deadzoneHeight / 2).toBeGreaterThan(126);
+    expect(profile.lerpX).toBe(0.1);
+    expect(profile.lerpY).toBe(0.055);
+  });
+
+  it("keeps the existing responsive follow on wide game views", () => {
+    const profile = cameraFollowProfile(960, 540);
+
+    expect(profile.calmPortrait).toBe(false);
+    expect(profile.deadzoneWidth).toBeCloseTo(249.6);
+    expect(profile.deadzoneHeight).toBe(108);
+    expect(profile.lerpX).toBe(0.13);
+    expect(profile.lerpY).toBe(0.17);
   });
 });

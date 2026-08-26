@@ -18,7 +18,11 @@ import {
   type EnemySpawn,
 } from "./enemies";
 import type { SharedControlState } from "./input";
-import { aimedProjectileVelocity, alignSpriteFeetToSurface } from "./runtimeMath";
+import {
+  aimedProjectileVelocity,
+  alignSpriteFeetToSurface,
+  cameraFollowProfile,
+} from "./runtimeMath";
 import {
   OPTIONAL_BACKGROUND_KEY,
   OPTIONAL_OTTER_KEY,
@@ -89,6 +93,7 @@ export class VibeTideScene extends Phaser.Scene {
   private keyA: Phaser.Input.Keyboard.Key | null = null;
   private keyD: Phaser.Input.Keyboard.Key | null = null;
   private keyW: Phaser.Input.Keyboard.Key | null = null;
+  private calmPortraitCamera = false;
 
   constructor(hooks: VibeTideSceneHooks, controls: SharedControlState) {
     super({ key: VIBE_TIDE_SCENE_KEY });
@@ -716,7 +721,10 @@ export class VibeTideScene extends Phaser.Scene {
       this.defeatEnemy(enemy, true);
       this.player.setVelocityY(-JUMP_VELOCITY * 0.58);
       this.lastGroundedAt = Number.NEGATIVE_INFINITY;
-      this.cameras.main.shake(55, 0.0025);
+      this.cameras.main.shake(
+        this.calmPortraitCamera ? 35 : 55,
+        this.calmPortraitCamera ? 0.001 : 0.0025,
+      );
       return;
     }
 
@@ -882,7 +890,10 @@ export class VibeTideScene extends Phaser.Scene {
 
     this.isRespawning = true;
     this.hooks.onPlayerDeath(this.getCurrentGridPosition());
-    this.cameras.main.shake(140, 0.006);
+    this.cameras.main.shake(
+      this.calmPortraitCamera ? 70 : 140,
+      this.calmPortraitCamera ? 0.0015 : 0.006,
+    );
     this.player.setTint(0xff7c68);
     this.player.disableBody(true, true);
     this.clearProjectiles();
@@ -966,10 +977,19 @@ export class VibeTideScene extends Phaser.Scene {
       this.backdrop.setDisplaySize(gameSize.width, gameSize.height);
     }
 
-    this.cameras.main.setDeadzone(
-      Math.max(110, gameSize.width * 0.26),
-      Math.max(80, gameSize.height * 0.2),
-    );
+    const camera = this.cameras.main;
+    const previousScroll = { x: camera.scrollX, y: camera.scrollY };
+    const profile = cameraFollowProfile(gameSize.width, gameSize.height);
+    this.calmPortraitCamera = profile.calmPortrait;
+    camera
+      .setLerp(profile.lerpX, profile.lerpY)
+      .setDeadzone(profile.deadzoneWidth, profile.deadzoneHeight);
+
+    // Phaser recenters a following camera when its deadzone changes. Preserve
+    // the current view across mobile browser-chrome and orientation resizes.
+    if (this.isPlayMode && this.player !== null) {
+      camera.setScroll(previousScroll.x, previousScroll.y);
+    }
   }
 
   private handleShutdown(): void {
