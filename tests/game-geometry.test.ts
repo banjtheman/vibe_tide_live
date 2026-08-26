@@ -27,6 +27,7 @@ function level(tiles: TileId[][]): LevelDocument {
       description: "",
       difficulty: "beginner",
       primaryMechanic: "platforming",
+      background: "golden-coast",
       author: "agent",
     },
     createdAt: "2026-08-26T00:00:00.000Z",

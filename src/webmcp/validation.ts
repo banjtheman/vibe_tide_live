@@ -7,6 +7,7 @@ import {
   type PrimaryMechanic,
   type TileId,
 } from "../core/contracts";
+import { BACKGROUND_IDS, type BackgroundId } from "../core/backgrounds";
 
 const DIFFICULTIES = ["beginner", "moderate", "tricky"] as const;
 const PRIMARY_MECHANICS = ["platforming", "ice", "spikes", "water", "mixed"] as const;
@@ -106,7 +107,17 @@ export function parseBlueprint(input: unknown): LevelBlueprint {
   const value = record(input, toolName);
   exactKeys(
     value,
-    ["name", "description", "width", "height", "difficulty", "primary_mechanic", "seed", "sections"],
+    [
+      "name",
+      "description",
+      "width",
+      "height",
+      "difficulty",
+      "primary_mechanic",
+      "background",
+      "seed",
+      "sections",
+    ],
     toolName,
   );
 
@@ -132,6 +143,14 @@ export function parseBlueprint(input: unknown): LevelBlueprint {
       "primary_mechanic",
       toolName,
       PRIMARY_MECHANICS,
+    );
+  }
+  if (value.background !== undefined) {
+    blueprint.background = enumValue(
+      value.background,
+      "background",
+      toolName,
+      BACKGROUND_IDS,
     );
   }
   if (value.seed !== undefined) {
@@ -293,4 +312,16 @@ export function parseMetadata(input: unknown): MetadataInput {
     );
   }
   return changes;
+}
+
+export function parseBackground(input: unknown): BackgroundId {
+  const toolName = "set_level_background";
+  const value = record(input, toolName);
+  exactKeys(value, ["background"], toolName);
+  return enumValue(
+    required(value, "background", toolName),
+    "background",
+    toolName,
+    BACKGROUND_IDS,
+  );
 }

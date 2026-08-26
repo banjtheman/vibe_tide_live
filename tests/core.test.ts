@@ -2,6 +2,9 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   LEVEL_CODEC_PREFIX,
+  BACKGROUND_DEFINITIONS,
+  BACKGROUND_IDS,
+  DEFAULT_BACKGROUND_ID,
   TILE_DEFINITIONS,
   TILE_IDS,
   LevelCodecError,
@@ -25,6 +28,19 @@ describe("builder piece definitions", () => {
       expect(TILE_DEFINITIONS[tile].category.length).toBeGreaterThan(0);
       expect(TILE_DEFINITIONS[tile].description.length).toBeGreaterThan(20);
       expect(TILE_DEFINITIONS[tile].description.length).toBeLessThanOrEqual(80);
+    }
+  });
+});
+
+describe("level backgrounds", () => {
+  it("exposes ten unique consumer-facing themes with full and thumbnail assets", () => {
+    expect(BACKGROUND_DEFINITIONS).toHaveLength(10);
+    expect(new Set(BACKGROUND_IDS).size).toBe(10);
+    for (const background of BACKGROUND_DEFINITIONS) {
+      expect(background.name.length).toBeGreaterThan(0);
+      expect(background.description.length).toBeGreaterThan(20);
+      expect(background.assetPath).toMatch(/\.webp$/);
+      expect(background.thumbnailPath).toContain("/thumbs/");
     }
   });
 });
@@ -61,6 +77,7 @@ const richBlueprint: LevelBlueprint = {
   height: 20,
   difficulty: "tricky",
   primaryMechanic: "mixed",
+  background: "starlight-tidepool",
   seed: 42,
   sections: [
     { kind: "run", length: 4 },
@@ -81,6 +98,7 @@ describe("deterministic level generator", () => {
     expect(second).toEqual(first);
     expect(first.id).toMatch(/^tide_[a-z0-9]+$/);
     expect(first.createdAt).toBe("1970-01-01T00:00:00.000Z");
+    expect(first.metadata.background).toBe("starlight-tidepool");
     expect(validateLevel(first).valid).toBe(true);
   });
 
@@ -134,6 +152,7 @@ describe("deterministic level generator", () => {
     expect(level.tiles).toHaveLength(10);
     expect(level.tiles.every((row) => row.length === 80)).toBe(true);
     expect(validateLevel(level).valid).toBe(true);
+    expect(level.metadata.background).toBe(DEFAULT_BACKGROUND_ID);
   });
 
   it("uses seed changes to vary decoration/layout without compromising validity", () => {
@@ -220,18 +239,35 @@ describe("versioned URL-safe codec", () => {
     const encoded = encodeLevel(level);
 
     expect(encoded.startsWith(LEVEL_CODEC_PREFIX)).toBe(true);
-    expect(encoded).toMatch(/^vt1\.[A-Za-z0-9_-]+$/);
+    expect(encoded).toMatch(/^vt2\.[A-Za-z0-9_-]+$/);
     expect(decodeLevel(encoded)).toEqual(level);
     expect(decodeLevel(`https://example.test/play?level=${encoded}`)).toEqual(level);
     expect(decodeLevel(`https://example.test/play#level=${encoded}`)).toEqual(level);
   });
 
+  it("keeps links made before backgrounds and defaults them to Golden Coast", () => {
+    const current = encodeLevel(generateLevel({ name: "Legacy", seed: 4 }));
+    const body = current.slice(LEVEL_CODEC_PREFIX.length);
+    const padded = body.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(body.length / 4) * 4, "=");
+    const binary = atob(padded);
+    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+    const envelope = JSON.parse(new TextDecoder().decode(bytes)) as [number, unknown[]];
+    envelope[0] = 1;
+    envelope[1].pop();
+    const legacyBytes = new TextEncoder().encode(JSON.stringify(envelope));
+    let legacyBinary = "";
+    for (const byte of legacyBytes) legacyBinary += String.fromCharCode(byte);
+    const legacy = "vt1." + btoa(legacyBinary).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+
+    expect(decodeLevel(legacy).metadata.background).toBe(DEFAULT_BACKGROUND_ID);
+  });
+
   it("rejects corrupt data and unsupported versions with useful failures", () => {
-    expect(() => decodeLevel("vt2.AAAA")).toThrow(/version 2/i);
+    expect(() => decodeLevel("vt3.AAAA")).toThrow(/version 3/i);
     expect(() => decodeLevel("vt1.%%%")) .toThrow(LevelCodecError);
     expect(tryDecodeLevel("not-a-level")).toEqual({
       ok: false,
-      error: expect.stringContaining("vt1."),
+      error: expect.stringContaining("vt2."),
     });
   });
 
@@ -341,6 +377,21 @@ describe("LevelStore transactions, history, and persistence", () => {
     expect(store.undo().ok).toBe(true);
     expect(store.undo().ok).toBe(true);
     expect(store.undo().ok).toBe(false);
+  });
+
+  it("changes and undoes the visual backdrop as a normal level revision", () => {
+    const store = new LevelStore({ storage: null, now: tickingClock() });
+    const initial = store.getSnapshot().level;
+
+    const changed = store.setBackground("aurora-current", "agent");
+    expect(changed.ok).toBe(true);
+    expect(changed.revision).toBe(initial.revision + 1);
+    expect(store.getSnapshot().level.metadata.background).toBe("aurora-current");
+    expect(store.getSnapshot().level.metadata.author).toBe("human+agent");
+    expect(store.getSnapshot().activity[0]?.action).toBe("Changed backdrop");
+
+    expect(store.undo("human").ok).toBe(true);
+    expect(store.getSnapshot().level.metadata.background).toBe(initial.metadata.background);
   });
 
   it("persists the level, history, activity, and last playtest when storage is available", () => {

@@ -1,3 +1,4 @@
+import { BACKGROUND_IDS } from "../core/backgrounds";
 import type { JsonSchema } from "./types";
 
 const tileIdSchema = {
@@ -13,6 +14,12 @@ const difficultySchema = {
 const primaryMechanicSchema = {
   type: "string",
   enum: ["platforming", "ice", "spikes", "water", "mixed"],
+} as const;
+
+const backgroundSchema = {
+  type: "string",
+  enum: BACKGROUND_IDS,
+  description: "Visual backdrop used in the builder, play mode, and shared level URL.",
 } as const;
 
 export const EMPTY_INPUT_SCHEMA = {
@@ -38,6 +45,7 @@ export const CREATE_LEVEL_SCHEMA = {
     height: { type: "integer", minimum: 10, maximum: 32 },
     difficulty: difficultySchema,
     primary_mechanic: primaryMechanicSchema,
+    background: backgroundSchema,
     seed: { type: "integer", minimum: 0, maximum: 2147483647 },
     sections: {
       type: "array",
@@ -152,5 +160,14 @@ export const SET_METADATA_SCHEMA = {
     primary_mechanic: primaryMechanicSchema,
   },
   minProperties: 1,
+  additionalProperties: false,
+} as const satisfies JsonSchema;
+
+export const SET_BACKGROUND_SCHEMA = {
+  type: "object",
+  properties: {
+    background: backgroundSchema,
+  },
+  required: ["background"],
   additionalProperties: false,
 } as const satisfies JsonSchema;

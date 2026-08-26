@@ -1,3 +1,5 @@
+import type { BackgroundId } from "./backgrounds";
+
 export const LEVEL_SCHEMA_VERSION = 1 as const;
 
 export const TILE_IDS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
@@ -83,6 +85,7 @@ export interface LevelMetadata {
   description: string;
   difficulty: Difficulty;
   primaryMechanic: PrimaryMechanic;
+  background: BackgroundId;
   author: "human" | "agent" | "human+agent";
 }
 
@@ -184,6 +187,7 @@ export interface LevelBlueprint {
   height?: number;
   difficulty?: Difficulty;
   primaryMechanic?: PrimaryMechanic;
+  background?: BackgroundId;
   seed?: number;
   sections?: LevelSectionSpec[];
 }
@@ -216,6 +220,7 @@ export interface StudioStore {
     changes: Partial<Pick<LevelMetadata, "name" | "description" | "difficulty" | "primaryMechanic">>,
     source?: "human" | "agent",
   ): MutationResult;
+  setBackground(background: BackgroundId, source?: "human" | "agent"): MutationResult;
   setMode(mode: StudioMode, source?: "human" | "agent"): StudioSnapshot;
   beginPlaytest(): PlaytestReport;
   recordPlaytestEvent(event: Omit<PlaytestEvent, "revision" | "timestamp">): PlaytestReport;

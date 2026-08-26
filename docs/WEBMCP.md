@@ -12,7 +12,9 @@ await document.modelContext.registerTool(tool, { signal });
 
 The app treats execution options defensively because early host implementations may omit the optional invocation object even though the current draft documents `{ signal }`. When supplied, cancellation is checked before and after asynchronous callbacks.
 
-`create_share_link` returns the same self-contained `vt1.` level URL as the human Share action. Current links include `mode=play`, so recipients land directly in the Phaser playtest; older links without a mode continue to open in the builder.
+`create_share_link` returns the same self-contained `vt2.` level URL as the human Share action. Current links include `mode=play`, so recipients land directly in the Phaser playtest; legacy `vt1.` links remain readable and older links without a mode continue to open in the builder.
+
+`set_level_background` changes only the level’s visual scene. The ten accepted IDs are `golden-coast`, `neon-moonwave`, `bioluminescent-grotto`, `stormglass-reef`, `moonlit-lagoon`, `aurora-current`, `sunken-temple`, `kelp-cathedral`, `starlight-tidepool`, and `festival-shore`. Blueprint creation accepts the same optional `background` field, and the compact share codec preserves it.
 
 ## Design rules
 

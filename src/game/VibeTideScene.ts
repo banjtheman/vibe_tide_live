@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 
+import { DEFAULT_BACKGROUND_ID, type BackgroundId } from "../core/backgrounds";
 import type { GridPoint, LevelDocument, StudioSnapshot, TileId } from "../core/contracts";
 import {
   DEFAULT_TILE_SIZE,
@@ -24,10 +25,10 @@ import {
   cameraFollowProfile,
 } from "./runtimeMath";
 import {
-  OPTIONAL_BACKGROUND_KEY,
   OPTIONAL_OTTER_KEY,
   PROCEDURAL_TEXTURES,
   V1_OTTER_ATLAS_KEY,
+  backgroundTextureKey,
   ensureProceduralTextures,
   queueOptionalVibeTideAssets,
 } from "./textures";
@@ -102,7 +103,7 @@ export class VibeTideScene extends Phaser.Scene {
   }
 
   preload(): void {
-    queueOptionalVibeTideAssets(this);
+    queueOptionalVibeTideAssets(this, this.hooks.readSnapshot().level.metadata.background);
   }
 
   create(): void {
@@ -117,7 +118,7 @@ export class VibeTideScene extends Phaser.Scene {
     this.lastTouchJumpSequence = this.sharedControls.jumpSequence;
 
     ensureProceduralTextures(this);
-    this.createBackdrop();
+    this.createBackdrop(snapshot.level.metadata.background);
     this.createLevelTiles(snapshot.level);
     this.configureCamera(snapshot.level);
 
@@ -203,12 +204,16 @@ export class VibeTideScene extends Phaser.Scene {
     return worldToGridPoint({ x: this.player.x, y: this.player.y }, this.level);
   }
 
-  private createBackdrop(): void {
-    const texture = this.textures.exists(OPTIONAL_BACKGROUND_KEY)
-      ? OPTIONAL_BACKGROUND_KEY
-      : PROCEDURAL_TEXTURES.background;
+  private createBackdrop(background: BackgroundId = DEFAULT_BACKGROUND_ID): void {
+    const backgroundKey = backgroundTextureKey(background);
+    const fallbackKey = backgroundTextureKey(DEFAULT_BACKGROUND_ID);
+    const texture = this.textures.exists(backgroundKey)
+      ? backgroundKey
+      : this.textures.exists(fallbackKey)
+        ? fallbackKey
+        : PROCEDURAL_TEXTURES.background;
 
-    this.backdrop = this.add.image(0, 0, texture).setOrigin(0).setScrollFactor(0).setDepth(-100);
+    this.backdrop = this.add.image(0, 0, texture).setOrigin(0.5).setScrollFactor(0).setDepth(-100);
   }
 
   private createLevelTiles(level: LevelDocument): void {
@@ -974,7 +979,12 @@ export class VibeTideScene extends Phaser.Scene {
 
   private handleResize(gameSize: Phaser.Structs.Size): void {
     if (this.backdrop !== null) {
-      this.backdrop.setDisplaySize(gameSize.width, gameSize.height);
+      const sourceWidth = Math.max(1, this.backdrop.width);
+      const sourceHeight = Math.max(1, this.backdrop.height);
+      const coverScale = Math.max(gameSize.width / sourceWidth, gameSize.height / sourceHeight);
+      this.backdrop
+        .setPosition(gameSize.width / 2, gameSize.height / 2)
+        .setScale(coverScale);
     }
 
     const camera = this.cameras.main;

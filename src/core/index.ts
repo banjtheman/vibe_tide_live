@@ -1,3 +1,4 @@
+export * from "./backgrounds";
 export * from "./contracts";
 export * from "./codec";
 export * from "./generator";

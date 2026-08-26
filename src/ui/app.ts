@@ -6,11 +6,16 @@ import {
   type StudioStore,
   type TileId,
 } from "../core/contracts";
+import {
+  BACKGROUND_DEFINITIONS,
+  backgroundDefinition,
+  isBackgroundId,
+} from "../core/backgrounds";
 import type { VibeTideGameController } from "../game";
 import { mountLevelEditor } from "./editor";
 
 const AGENT_PROMPT =
-  "Make me a playful beach level called Sunset Circuit. Give it an easy opening, a slippery sea-glass stretch, one fair spike challenge, and a finish I can reach.";
+  "Make me a playful level called Sunset Circuit with the Neon Moonwave background. Give it an easy opening, a slippery sea-glass stretch, one fair spike challenge, and a finish I can reach.";
 
 export interface StudioUIController {
   readonly gameMount: HTMLElement;
@@ -70,6 +75,26 @@ function makePaletteMarkup(): string {
         <span class="sr-only" id="tile-description-${tile}">${definition.description}</span>
       </button>`;
     },
+  ).join("");
+}
+
+function makeBackgroundPickerMarkup(): string {
+  return BACKGROUND_DEFINITIONS.map(
+    (background) => `
+      <button
+        class="background-choice"
+        type="button"
+        role="radio"
+        data-background="${background.id}"
+        aria-checked="${background.id === "golden-coast" ? "true" : "false"}"
+        tabindex="${background.id === "golden-coast" ? "0" : "-1"}"
+        aria-label="${background.name}: ${background.description}"
+        title="${background.description}"
+      >
+        <img src="${background.thumbnailPath}" alt="" width="320" height="180" loading="lazy" draggable="false" />
+        <span>${background.name}</span>
+        <span class="background-choice__check" aria-hidden="true">✓</span>
+      </button>`,
   ).join("");
 }
 
@@ -147,6 +172,12 @@ export function mountStudioUI(
                 </select>
               </label>
             </div>
+            <fieldset class="background-fieldset">
+              <legend class="field-label">Backdrop</legend>
+              <div class="background-picker" role="radiogroup" aria-label="Level backdrop">
+                ${makeBackgroundPickerMarkup()}
+              </div>
+            </fieldset>
           </section>
 
           <section class="rail__section">
@@ -169,7 +200,7 @@ export function mountStudioUI(
           <div class="stage-toolbar">
             <div class="stage-title">
               <h1 data-level-name>First light</h1>
-              <p data-level-meta>48 × 18 · beginner</p>
+              <p data-level-meta aria-live="polite" aria-atomic="true">48 × 18 · beginner</p>
             </div>
             <div class="mode-switch" aria-label="Level mode">
               <button type="button" data-mode="edit" aria-pressed="true">Build</button>
@@ -279,6 +310,7 @@ export function mountStudioUI(
   const descriptionInput = requireElement<HTMLTextAreaElement>(root, '[data-field="description"]');
   const difficultyInput = requireElement<HTMLSelectElement>(root, '[data-field="difficulty"]');
   const mechanicInput = requireElement<HTMLSelectElement>(root, '[data-field="primaryMechanic"]');
+  const backgroundButtons = [...root.querySelectorAll<HTMLButtonElement>("[data-background]")];
   const modeButtons = [...root.querySelectorAll<HTMLButtonElement>("[data-mode]")];
   const paletteButtons = [...root.querySelectorAll<HTMLButtonElement>("[data-brush]")];
   const pieceSwatch = requireElement<HTMLElement>(root, "[data-piece-swatch]");
@@ -362,10 +394,13 @@ export function mountStudioUI(
     }
 
     stage.dataset.mode = snapshot.mode;
+    const background = backgroundDefinition(level.metadata.background);
+    stage.dataset.background = background.id;
+    stage.style.backgroundImage = `url("${background.assetPath}")`;
     stageHint.textContent = snapshot.mode === "play" ? "Reach the coral finish buoy!" : "Choose a piece, then drag to paint";
     stageStatus.textContent = snapshot.mode === "play" ? "Run in progress" : "Your changes save as you paint";
     levelName.textContent = level.metadata.name;
-    levelMeta.textContent = `${level.width} × ${level.height} · ${level.metadata.difficulty}`;
+    levelMeta.textContent = `${level.width} × ${level.height} · ${level.metadata.difficulty} · ${background.name}`;
     revision.textContent = `Version ${level.revision}`;
     undoButton.disabled = !snapshot.canUndo;
     playButtons.forEach((button) => {
@@ -382,6 +417,11 @@ export function mountStudioUI(
     syncField(descriptionInput, level.metadata.description);
     syncField(difficultyInput, level.metadata.difficulty);
     syncField(mechanicInput, level.metadata.primaryMechanic);
+    backgroundButtons.forEach((button) => {
+      const selected = button.dataset.background === background.id;
+      button.setAttribute("aria-checked", String(selected));
+      button.tabIndex = selected ? 0 : -1;
+    });
 
     requireElement<HTMLElement>(root, '[data-metric="reachable"]').textContent = String(validation.reachableCells);
     const report = snapshot.activePlaytest ?? snapshot.lastPlaytest;
@@ -447,6 +487,31 @@ export function mountStudioUI(
   mechanicInput.addEventListener("change", () => {
     store.setMetadata({ primaryMechanic: mechanicInput.value as "platforming" | "ice" | "spikes" | "water" | "mixed" }, "human");
   });
+  backgroundButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const background = button.dataset.background;
+      if (isBackgroundId(background)) store.setBackground(background, "human");
+    });
+    button.addEventListener("keydown", (event) => {
+      const currentIndex = backgroundButtons.indexOf(button);
+      let nextIndex = currentIndex;
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+        nextIndex = (currentIndex + 1) % backgroundButtons.length;
+      } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+        nextIndex = (currentIndex - 1 + backgroundButtons.length) % backgroundButtons.length;
+      } else if (event.key === "Home") {
+        nextIndex = 0;
+      } else if (event.key === "End") {
+        nextIndex = backgroundButtons.length - 1;
+      } else {
+        return;
+      }
+      event.preventDefault();
+      const next = backgroundButtons[nextIndex];
+      next?.focus();
+      next?.click();
+    });
+  });
 
   requireElement<HTMLButtonElement>(root, '[data-action="fresh"]').addEventListener("click", () => {
     const current = store.getSnapshot().level.metadata;
@@ -456,6 +521,7 @@ export function mountStudioUI(
         description: descriptionInput.value.trim() || current.description,
         difficulty: difficultyInput.value as "beginner" | "moderate" | "tricky",
         primaryMechanic: mechanicInput.value as "platforming" | "ice" | "spikes" | "water" | "mixed",
+        background: store.getSnapshot().level.metadata.background,
         seed: Date.now() >>> 0,
       },
       "human",

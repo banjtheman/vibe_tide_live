@@ -8,6 +8,7 @@ import {
   type PrimaryMechanic,
   type TileId,
 } from "./contracts";
+import { DEFAULT_BACKGROUND_ID, type BackgroundId } from "./backgrounds";
 import { repairLevel, validateLevel } from "./validation";
 
 export const MIN_GENERATED_WIDTH = 20;
@@ -30,6 +31,7 @@ interface NormalizedBlueprint {
   height: number;
   difficulty: Difficulty;
   primaryMechanic: PrimaryMechanic;
+  background: BackgroundId;
   seed: number;
   sections: LevelSectionSpec[];
 }
@@ -226,6 +228,7 @@ function normalizeBlueprint(blueprint: LevelBlueprint): NormalizedBlueprint {
     height: clampInteger(blueprint.height, MIN_GENERATED_HEIGHT, MAX_GENERATED_HEIGHT, 18),
     difficulty,
     primaryMechanic: provisionalMechanic,
+    background: blueprint.background ?? DEFAULT_BACKGROUND_ID,
     seed: clampInteger(blueprint.seed, 0, 0xffff_ffff, hashString(seedSource)),
     sections,
   };
@@ -366,6 +369,7 @@ export function generateLevel(blueprint: LevelBlueprint, options: GenerateLevelO
       description: normalized.description,
       difficulty: normalized.difficulty,
       primaryMechanic: normalized.primaryMechanic,
+      background: normalized.background,
       author: options.author ?? "agent",
     },
     createdAt: timestamp,

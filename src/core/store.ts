@@ -1,4 +1,9 @@
 import {
+  backgroundDefinition,
+  isBackgroundId,
+  type BackgroundId,
+} from "./backgrounds";
+import {
   type ActivityEntry,
   type DeathCluster,
   type GridPoint,
@@ -581,6 +586,39 @@ export class LevelStore implements StudioStore {
       ok: true,
       revision: this.level.revision,
       summary: "Updated level details",
+      changedBounds: null,
+      validation: this.validation,
+    };
+  }
+
+  setBackground(
+    background: BackgroundId,
+    source: "human" | "agent" = "human",
+  ): MutationResult {
+    if (!isBackgroundId(background)) {
+      return this.noChange("Background is unsupported.", false);
+    }
+    if (background === this.level.metadata.background) {
+      return this.noChange("Background already matches the level.", true);
+    }
+    this.commitLevel(
+      {
+        ...this.level,
+        tiles: this.level.tiles.map((row) => [...row]),
+        metadata: {
+          ...this.level.metadata,
+          background,
+          author: mergeAuthor(this.level.metadata.author, source),
+        },
+      },
+      source,
+      "Changed backdrop",
+      backgroundDefinition(background).name,
+    );
+    return {
+      ok: true,
+      revision: this.level.revision,
+      summary: `Changed backdrop to ${backgroundDefinition(background).name}`,
       changedBounds: null,
       validation: this.validation,
     };

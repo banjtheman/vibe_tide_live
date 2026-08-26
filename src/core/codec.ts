@@ -6,9 +6,11 @@ import {
   type PrimaryMechanic,
   type TileId,
 } from "./contracts";
+import { DEFAULT_BACKGROUND_ID, isBackgroundId, type BackgroundId } from "./backgrounds";
 import { isTileId, MAX_LEVEL_HEIGHT, MAX_LEVEL_WIDTH, MIN_LEVEL_HEIGHT, MIN_LEVEL_WIDTH } from "./validation";
 
-export const LEVEL_CODEC_VERSION = 1 as const;
+const LEGACY_LEVEL_CODEC_VERSION = 1 as const;
+export const LEVEL_CODEC_VERSION = 2 as const;
 export const LEVEL_CODEC_PREFIX = `vt${LEVEL_CODEC_VERSION}.` as const;
 
 const BASE64_URL_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
@@ -31,7 +33,12 @@ type CompactLevelV1 = [
   updatedAt: string,
 ];
 
-type CodecEnvelopeV1 = [version: typeof LEVEL_CODEC_VERSION, level: CompactLevelV1];
+type CompactLevelV2 = [
+  ...CompactLevelV1,
+  background: BackgroundId,
+];
+
+type CodecEnvelopeV2 = [version: typeof LEVEL_CODEC_VERSION, level: CompactLevelV2];
 
 export class LevelCodecError extends Error {
   constructor(message: string) {
@@ -149,7 +156,7 @@ function decodeTileRuns(value: unknown, width: number, height: number): TileId[]
   );
 }
 
-function compactLevel(level: LevelDocument): CompactLevelV1 {
+function compactLevel(level: LevelDocument): CompactLevelV2 {
   return [
     level.id,
     level.revision,
@@ -163,14 +170,20 @@ function compactLevel(level: LevelDocument): CompactLevelV1 {
     level.metadata.author,
     level.createdAt,
     level.updatedAt,
+    level.metadata.background,
   ];
 }
 
-function expandLevel(value: unknown): LevelDocument {
-  if (!Array.isArray(value) || value.length !== 12) {
+function expandLevel(
+  value: unknown,
+  version: typeof LEGACY_LEVEL_CODEC_VERSION | typeof LEVEL_CODEC_VERSION,
+): LevelDocument {
+  const expectedLength = version === LEGACY_LEVEL_CODEC_VERSION ? 12 : 13;
+  if (!Array.isArray(value) || value.length !== expectedLength) {
     throw new LevelCodecError("Level payload has an unsupported shape.");
   }
   const [idValue, revisionValue, widthValue, heightValue, runs, nameValue, descriptionValue, difficultyValue, mechanicValue, authorValue, createdValue, updatedValue] = value;
+  const backgroundValue = version === LEVEL_CODEC_VERSION ? value[12] : undefined;
   const id = requireString(idValue, "Level id", 128);
   if (!isIntegerInRange(revisionValue, 0, Number.MAX_SAFE_INTEGER)) {
     throw new LevelCodecError("Level revision is invalid.");
@@ -194,6 +207,10 @@ function expandLevel(value: unknown): LevelDocument {
   if (typeof authorValue !== "string" || !AUTHORS.has(authorValue as LevelMetadata["author"])) {
     throw new LevelCodecError("Level author is invalid.");
   }
+  const background = backgroundValue === undefined ? DEFAULT_BACKGROUND_ID : backgroundValue;
+  if (!isBackgroundId(background)) {
+    throw new LevelCodecError("Level background is unsupported.");
+  }
   const createdAt = requireString(createdValue, "Creation timestamp", 64);
   const updatedAt = requireString(updatedValue, "Update timestamp", 64);
   if (!Number.isFinite(Date.parse(createdAt)) || !Number.isFinite(Date.parse(updatedAt))) {
@@ -212,6 +229,7 @@ function expandLevel(value: unknown): LevelDocument {
       description: descriptionValue,
       difficulty: difficultyValue as Difficulty,
       primaryMechanic: mechanicValue as PrimaryMechanic,
+      background,
       author: authorValue as LevelMetadata["author"],
     },
     createdAt,
@@ -255,8 +273,8 @@ export function encodeLevel(level: LevelDocument): string {
   const compact = compactLevel(level);
   // Run the compact form through the same strict checks as imported data so a
   // runtime-cast document cannot produce a share code that fails on receipt.
-  expandLevel(compact);
-  const envelope: CodecEnvelopeV1 = [LEVEL_CODEC_VERSION, compact];
+  expandLevel(compact, LEVEL_CODEC_VERSION);
+  const envelope: CodecEnvelopeV2 = [LEVEL_CODEC_VERSION, compact];
   return LEVEL_CODEC_PREFIX + encodeBase64Url(new TextEncoder().encode(JSON.stringify(envelope)));
 }
 
@@ -268,7 +286,7 @@ export function decodeLevel(input: string): LevelDocument {
     throw new LevelCodecError("Level code prefix is malformed.");
   }
   const version = Number(match[1]);
-  if (version !== LEVEL_CODEC_VERSION) {
+  if (version !== LEGACY_LEVEL_CODEC_VERSION && version !== LEVEL_CODEC_VERSION) {
     throw new LevelCodecError(`Unsupported level codec version ${version}.`);
   }
   const body = match[2];
@@ -285,10 +303,10 @@ export function decodeLevel(input: string): LevelDocument {
     }
     throw new LevelCodecError("Level code could not be decoded.");
   }
-  if (!Array.isArray(parsed) || parsed.length !== 2 || parsed[0] !== LEVEL_CODEC_VERSION) {
+  if (!Array.isArray(parsed) || parsed.length !== 2 || parsed[0] !== version) {
     throw new LevelCodecError("Level payload version does not match its prefix.");
   }
-  return expandLevel(parsed[1]);
+  return expandLevel(parsed[1], version);
 }
 
 export function tryDecodeLevel(input: string): DecodeLevelResult {

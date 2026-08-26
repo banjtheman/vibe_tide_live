@@ -1,0 +1,28 @@
+Tool: OpenAI built-in ImageGen
+Use case: stylized-concept
+Output: public/og-v1.png
+
+Asset type: branded Open Graph / X social-preview key-art card, landscape 1200 × 630 composition (1.91:1), polished consumer-facing game banner.
+
+Input images:
+- Image 1 is mood and visual-language inspiration only: use its deep navy ocean horizon, subtle radial concert-light energy, cyan/magenta audio visualization accents, and musical atmosphere. Create a clearly original composition; do not copy its layout, logo treatment, object arrangement, or character design.
+- Image 2 is the exact current character identity reference: preserve the cute upright brown otter's recognizable face and proportions, warm brown fur, cream muzzle and belly, large expressive brown eyes, small dark nose, purple over-ear headphones, and bright cyan inner headphone rings.
+
+Primary request: Create original key art that feels like the spiritual successor to VibeTide V1 while matching the current game. Show exactly one otter in a joyful, dynamic mid-jump / landing pose across the lower-middle, interacting with a compact arrangement of clearly readable solid opaque platform blocks. The platforms are chunky teal and coral game blocks with simple dimensional faces—never transparent, glassy, floating islands, or holograms. Add speakers or waveform motifs sparingly as secondary accents only. Convey playful adventurous arcade-platformer energy.
+
+Scene/backdrop: Deep navy ocean at twilight blending into a restrained coral-and-violet sunset horizon, with subtle water reflections. Soft radial concert-light rays and a few controlled cyan/violet audio-energy accents frame the action without clutter.
+
+Style/medium: premium stylized 2D/3D hybrid game key art, clean rounded forms, crisp silhouettes, rich color, polished lighting, strong thumbnail readability, modern arcade-platformer branding. Original composition, not a remake of Image 1.
+
+Composition/framing: exact wide 1.91:1 social-card layout. Place the title centered in the upper third, the supporting line immediately below it, and the single otter plus solid teal/coral platforms across the lower-middle. Keep every letter, the entire otter including tail and headphones, and all important objects well inside generous crop-safe margins (at least 8% on all sides). Preserve strong negative space and an uncluttered hierarchy.
+
+Lighting/mood: bright cyan and violet rim glow with warm coral sunset fill; buoyant, musical, adventurous, welcoming.
+
+Text (verbatim): The ONLY visible text anywhere in the image is exactly these two lines, each rendered once:
+VIBETIDE LIVE
+PLAY • BUILD • SHARE
+Spell the first word exactly V-I-B-E-T-I-D-E as one word. Render the title in bold, strong arcade/platformer display lettering, centered, perfectly legible at thumbnail size. Render the supporting line immediately below, smaller but crisp. No other letters, numbers, symbols, labels, signage, or pseudo-text.
+
+Constraints: exactly one otter; preserve the Image 2 character identity; joyful mid-jump/landing pose; solid opaque teal/coral platform blocks; exactly two text lines total; full uncropped title and character; generous safe margins; landscape social-preview composition; no copied V1 layout.
+
+Avoid: extra characters, duplicated otters, transparent or glass blocks, floating rock islands, UI chrome, browser controls, HUD elements, buttons, watermarks, extra logos, extra text, misspellings, split or hyphenated VIBETIDE, cropped text, cropped tail, cropped headphones, busy background, photorealism.

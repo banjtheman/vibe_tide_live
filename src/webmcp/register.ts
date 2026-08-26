@@ -10,6 +10,7 @@ import {
   APPLY_PATCH_SCHEMA,
   CREATE_LEVEL_SCHEMA,
   EMPTY_INPUT_SCHEMA,
+  SET_BACKGROUND_SCHEMA,
   SET_METADATA_SCHEMA,
 } from "./schemas";
 import type {
@@ -21,6 +22,7 @@ import type {
 } from "./types";
 import {
   parseBlueprint,
+  parseBackground,
   parseEmptyInput,
   parseMetadata,
   parsePatch,
@@ -31,6 +33,7 @@ export const VIBE_TIDE_TOOL_NAMES = [
   "create_level_from_blueprint",
   "apply_level_patch",
   "set_level_metadata",
+  "set_level_background",
   "validate_level",
   "get_playtest_report",
   "start_playtest",
@@ -138,7 +141,7 @@ function makeTools(
       name: "create_level_from_blueprint",
       title: "Create VibeTide level",
       description:
-        "Replace the current level with a deterministic playable level built from a name, difficulty, mechanic, seed, and optional ordered sections.",
+        "Replace the current level with a deterministic playable level built from a name, difficulty, mechanic, background, seed, and optional ordered sections.",
       inputSchema: CREATE_LEVEL_SCHEMA,
       annotations: { readOnlyHint: false, untrustedContentHint: false },
       execute: async (input, options) => {
@@ -176,6 +179,19 @@ function makeTools(
         const changes = parseMetadata(input);
         assertNotAborted(options);
         return mutationResult("Updated metadata", store.setMetadata(changes, "agent"));
+      },
+    },
+    {
+      name: "set_level_background",
+      title: "Set level background",
+      description:
+        "Change the current level's visual backdrop without changing its tiles. Choose one of: golden-coast, neon-moonwave, bioluminescent-grotto, stormglass-reef, moonlit-lagoon, aurora-current, sunken-temple, kelp-cathedral, starlight-tidepool, or festival-shore.",
+      inputSchema: SET_BACKGROUND_SCHEMA,
+      annotations: { readOnlyHint: false, untrustedContentHint: false },
+      execute: async (input, options) => {
+        const background = parseBackground(input);
+        assertNotAborted(options);
+        return mutationResult("Changed background", store.setBackground(background, "agent"));
       },
     },
     {

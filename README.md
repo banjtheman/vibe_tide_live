@@ -17,7 +17,7 @@ VibeTide Live is a colorful 2D platformer and instant level maker. Run, jump, do
 ## Play, build, share
 
 - **Play:** Tackle side-scrolling routes with slippery sea glass, water, vents, spikes, patrolling reef crawlers, flying swell-wings, and projectile-firing tide-spitters.
-- **Build:** Switch to Build mode and paint tiles directly, edit the level’s name and style, validate the route, or undo a change.
+- **Build:** Switch to Build mode, choose from ten illustrated backdrops, paint tiles directly, edit the level’s name and style, validate the route, or undo a change.
 - **Share:** Copy one compact URL that opens the same level directly in Play mode—no account, JSON download, or server save required.
 - **Create with an agent:** In a WebMCP-capable browser, describe the experience you want. The agent can build, validate, playtest, repair, and share it using the tools exposed by the page.
 
@@ -38,15 +38,16 @@ The editor describes each tile’s behavior before you paint it: dune grass and 
 - Deterministic blueprint-to-level generation with runs, gaps, stairs, ice, water, hazards, and a reachable finish
 - Phaser 3 side-scrolling play with Arcade physics, coyote time, jump buffering, ice momentum, camera follow, keyboard input, and touch controls
 - An eight-frame idle, run, jump, and fall animation atlas for the upright V1 headphone otter
+- Ten original level backdrops, from Golden Coast and Neon Moonwave to Kelp Cathedral and Starlight Tidepool
 - Three enemy families: ground-patrolling reef crawlers, flying swell-wings, and ranged tide-spitters with full-travel projectiles
 - Structural and reachability validation, atomic tile patches, revision history, and undo
 - Playtest reports with completion, elapsed time, deaths, recent events, and death clustering
 - Responsive, high-contrast editing and play surfaces for desktop and mobile
-- A compact, versioned `vt1.` level format for shareable URLs
+- A compact, versioned `vt2.` level format for shareable URLs, with backward-compatible `vt1.` imports
 
 ## WebMCP
 
-VibeTide registers nine structured tools directly on the page: agents can inspect and generate levels, apply precise patches, edit metadata, validate reachability, start and review playtests, undo changes, and create share links. Inputs use narrow JSON Schemas plus runtime validation, while the agent and visual editor operate on the same `LevelStore` snapshot.
+VibeTide registers ten structured tools directly on the page: agents can inspect and generate levels, apply precise patches, edit metadata, change the visual background, validate reachability, start and review playtests, undo changes, and create share links. Inputs use narrow JSON Schemas plus runtime validation, while the agent and visual editor operate on the same `LevelStore` snapshot.
 
 See [the WebMCP implementation notes](docs/WEBMCP.md) for the complete tool contract, tile IDs, safety boundaries, and local test harness.
 
@@ -80,7 +81,7 @@ Human editor ─┐
               ├─> LevelStore ─> frozen snapshot ─> editor + Phaser scene
 WebMCP tools ─┘       │                              │
                      ├─> validator + undo            └─> playtest events
-                     └─> vt1 URL codec <──────────────────────┘
+                     └─> vt2 URL codec <──────────────────────┘
 ```
 
 - `src/core` contains framework-free level state, generation, validation, telemetry, persistence, and encoding.
@@ -90,13 +91,15 @@ WebMCP tools ─┘       │                              │
 
 Levels persist in the browser’s local storage. A share action serializes the current level into the URL, so opening that URL reconstructs the shared snapshot and starts it in Play mode without uploading anything to a backend. The recipient can switch to Build to remix it. Playtest telemetry stays local unless a user deliberately shares its result through their agent conversation.
 
+Shared links also expose the level name and description to social preview crawlers while using a consistent V1-inspired VibeTide card. Search engines index the main game rather than every encoded level variation.
+
 ## Compatibility
 
 WebMCP is experimental. The editor and game run in ordinary modern browsers; the agent tool surface activates only when `document.modelContext` is available. The implementation follows the current [WebMCP draft](https://webmachinelearning.github.io/webmcp/) and OpenAI’s [site-tools guide](https://learn.chatgpt.com/docs/webmcp).
 
 ## Art and licensing
 
-The coast, character, animation atlas, and social artwork were created for VibeTide Live with OpenAI ImageGen; the production otter redraw preserves the project’s original upright V1 character and purple headphones. Enemy art is drawn procedurally in Phaser. No Corgi Engine code, Unity package, or third-party game art is included. Generation details and source provenance are documented in [docs/ART.md](docs/ART.md).
+The ten backdrops, character, animation atlas, and social artwork were created for VibeTide Live with OpenAI ImageGen; the production otter redraw preserves the project’s original upright V1 character and purple headphones. Enemy art is drawn procedurally in Phaser. Generation details and source provenance are documented in [docs/ART.md](docs/ART.md).
 
 Source code is available under the [MIT License](LICENSE). Original and generated art assets have separate terms in [ASSET_LICENSE.md](ASSET_LICENSE.md).
 
@@ -106,4 +109,4 @@ Source code is available under the [MIT License](LICENSE). Original and generate
 - [WebMCP implementation notes](docs/WEBMCP.md)
 - [Art direction and provenance](docs/ART.md)
 
-This repository is intentionally independent from the earlier Unity, iOS, and MCP experiments.
+For the project’s earlier agent-assisted iteration, see the [original VibeTide MCP repository](https://github.com/banjtheman/vibe_tide_mcp).

@@ -2,6 +2,7 @@ import "./styles.css";
 
 import { createLevelStore, tryDecodeLevel, type LevelDocument } from "./core";
 import type { VibeTideGameController } from "./game";
+import { applyDocumentSeo, createLevelPageSeo, ROOT_PAGE_SEO } from "./seo";
 import { createPlayableShareUrl, parseSharedLevelUrl, shouldAutoStartSharedLevel } from "./share";
 import { mountStudioUI } from "./ui";
 import { registerVibeTideTools, VIBE_TIDE_TOOL_NAMES, type VibeTideToolsRegistration } from "./webmcp";
@@ -15,6 +16,9 @@ if (!root) throw new Error("VibeTide could not find its app mount.");
 
 const sharedRequest = parseSharedLevelUrl(window.location.href);
 const decoded = sharedRequest.levelCode ? tryDecodeLevel(sharedRequest.levelCode) : null;
+applyDocumentSeo(
+  decoded?.ok ? createLevelPageSeo(decoded.level, window.location.href) : ROOT_PAGE_SEO,
+);
 const store = createLevelStore(decoded?.ok ? { initialLevel: decoded.level } : {});
 if (
   shouldAutoStartSharedLevel(

@@ -22,11 +22,11 @@ The official challenge lists usefulness, originality, execution, thoughtful use 
 
 **0–8s — Establish the surface**
 
-Open VibeTide Live. Point out that there is no embedded chatbot: the editor is already useful for a person, and the visiting agent discovers nine page tools.
+Open VibeTide Live. Point out that there is no embedded chatbot: the editor is already useful for a person, and the visiting agent discovers ten page tools.
 
 **8–23s — Build through intent**
 
-Ask: “Create Sunset Circuit: moderate, mixed, friendly opening, sea-glass run, fair spike section, reachable finish.” Show the full route appear in one moment and the author switch to Agent.
+Ask: “Create Sunset Circuit: moderate, mixed, Neon Moonwave backdrop, friendly opening, sea-glass run, fair spike section, reachable finish.” Show the full route and scene appear in one moment and the author switch to Agent.
 
 **23–31s — Prove, don’t promise**
 
@@ -51,13 +51,13 @@ Paint one tile manually, use agent undo, and call `create_share_link`. End on: �
 ## What is already complete
 
 - Core state, generation, validation, persistence, undo, codec, and telemetry
-- Nine WebMCP tools with schemas, runtime guards, cancellation, and browser verification
+- Ten WebMCP tools with schemas, runtime guards, cancellation, and browser verification
 - Playable Phaser runtime, three distinct enemy families, and responsive player-first UI
-- Original branded coast and an animated eight-frame version of the upright V1 headphone otter
+- Ten original illustrated scenes and an animated eight-frame version of the upright V1 headphone otter
 - Manual paint → shared revision → agent inspection/undo round trip
 - Automated type, core, geometry, and WebMCP tests
 - Public deployment on [OpenAI Sites](https://vibetide-live.banjtheman.chatgpt.site)
-- Production WebMCP round trip from a fresh browser: an agent discovered all nine tools, created and validated **Pearlstorm Passage**, started its playtest, created a share link, and reopened the same level without console errors
+- Production WebMCP round trip from a fresh browser: an agent discovered the page tools, created and validated **Pearlstorm Passage**, started its playtest, created a share link, and reopened the same level without console errors
 
 ## Remaining submission polish
 

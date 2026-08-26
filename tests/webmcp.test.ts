@@ -18,6 +18,7 @@ import type {
   StudioSnapshot,
   StudioStore,
 } from "../src/core/contracts";
+import type { BackgroundId } from "../src/core/backgrounds";
 
 const validReport = {
   valid: true,
@@ -45,6 +46,7 @@ function initialLevel(): LevelDocument {
       description: "A small test level.",
       difficulty: "beginner",
       primaryMechanic: "platforming",
+      background: "golden-coast",
       author: "human",
     },
     createdAt: "2026-08-26T12:00:00.000Z",
@@ -80,6 +82,7 @@ class StoreDouble implements StudioStore {
   lastBlueprint: LevelBlueprint | null = null;
   lastPatch: { operations: LevelPatchOperation[]; reason: string } | null = null;
   lastMetadata: Partial<LevelMetadata> | null = null;
+  lastBackground: BackgroundId | null = null;
   lastSource: "human" | "agent" | null = null;
 
   getSnapshot(): StudioSnapshot {
@@ -113,6 +116,15 @@ class StoreDouble implements StudioStore {
     this.lastMetadata = changes;
     this.lastSource = source;
     return this.result("metadata accepted");
+  }
+
+  setBackground(
+    background: BackgroundId,
+    source: "human" | "agent" = "human",
+  ): MutationResult {
+    this.lastBackground = background;
+    this.lastSource = source;
+    return this.result("background accepted");
   }
 
   setMode(mode: StudioMode, source: "human" | "agent" = "human"): StudioSnapshot {
@@ -180,7 +192,7 @@ describe("registerVibeTideTools", () => {
     Reflect.deleteProperty(globalThis, "document");
   });
 
-  it("registers the nine standard tools and unregisters all of them via AbortSignal", async () => {
+  it("registers the ten standard tools and unregisters all of them via AbortSignal", async () => {
     const modelContext = new InMemoryModelContext();
     installModelContext(modelContext);
 
@@ -252,6 +264,7 @@ describe("registerVibeTideTools", () => {
       height: 18,
       difficulty: "tricky",
       primary_mechanic: "ice",
+      background: "neon-moonwave",
       seed: 42,
       sections: [{ kind: "ice", length: 8, intensity: 2 }],
     });
@@ -263,6 +276,7 @@ describe("registerVibeTideTools", () => {
       height: 18,
       difficulty: "tricky",
       primaryMechanic: "ice",
+      background: "neon-moonwave",
       seed: 42,
       sections: [{ kind: "ice", length: 8, intensity: 2 }],
     });
@@ -323,6 +337,24 @@ describe("registerVibeTideTools", () => {
     await expect(modelContext.invoke("set_level_metadata", {})).rejects.toThrow(
       "provide at least one metadata field",
     );
+  });
+
+  it("changes the level background as an agent and rejects unknown themes", async () => {
+    const store = new StoreDouble();
+    const modelContext = new InMemoryModelContext();
+    installModelContext(modelContext);
+    await registerVibeTideTools(store);
+
+    const output = await modelContext.invoke("set_level_background", {
+      background: "kelp-cathedral",
+    });
+
+    expect(store.lastBackground).toBe("kelp-cathedral");
+    expect(store.lastSource).toBe("agent");
+    expect(output).toContain("Changed background");
+    await expect(
+      modelContext.invoke("set_level_background", { background: "plain-blue" }),
+    ).rejects.toThrow("background must be one of");
   });
 
   it("starts valid playtests, reports telemetry, and honors execution cancellation", async () => {

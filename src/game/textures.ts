@@ -1,10 +1,18 @@
 import Phaser from "phaser";
 
+import {
+  DEFAULT_BACKGROUND_ID,
+  backgroundDefinition,
+  type BackgroundId,
+} from "../core/backgrounds";
 import { DEFAULT_TILE_SIZE } from "./geometry";
 
-export const OPTIONAL_BACKGROUND_KEY = "vibetide:background:asset";
 export const OPTIONAL_OTTER_KEY = "vibetide:otter:asset";
 export const V1_OTTER_ATLAS_KEY = "vibetide:otter:v1-atlas";
+
+export function backgroundTextureKey(id: BackgroundId): string {
+  return `vibetide:background:${id}`;
+}
 
 export const PROCEDURAL_TEXTURES = {
   background: "vibetide:background:procedural",
@@ -26,14 +34,23 @@ export const PROCEDURAL_TEXTURES = {
 
 const BACKDROP_SIZE = 512;
 
-export function queueOptionalVibeTideAssets(scene: Phaser.Scene): void {
+export function queueOptionalVibeTideAssets(
+  scene: Phaser.Scene,
+  selectedBackground: BackgroundId = DEFAULT_BACKGROUND_ID,
+): void {
+  for (const backgroundId of new Set([DEFAULT_BACKGROUND_ID, selectedBackground])) {
+    const textureKey = backgroundTextureKey(backgroundId);
+    if (!scene.textures.exists(textureKey)) {
+      scene.load.image(textureKey, backgroundDefinition(backgroundId).assetPath);
+    }
+  }
+
   const attemptedKey = "vibetide:optional-assets-attempted";
   if (scene.registry.get(attemptedKey) === true) {
     return;
   }
 
   scene.registry.set(attemptedKey, true);
-  scene.load.image(OPTIONAL_BACKGROUND_KEY, "/assets/vibetide-background.webp");
   scene.load.image(OPTIONAL_OTTER_KEY, "/assets/vibetide-otter.webp");
   scene.load.spritesheet(V1_OTTER_ATLAS_KEY, "/assets/vibetide-otter-v1-atlas.png", {
     frameWidth: 444,
