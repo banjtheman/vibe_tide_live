@@ -1,0 +1,64 @@
+{
+  "humanBuild": {
+    "file": "captures/human-build.mp4",
+    "width": 1920,
+    "height": 1080,
+    "durationSeconds": 10.567,
+    "markers": {
+      "ready": 2.039,
+      "edit_name": 2.942,
+      "choose_world": 3.654,
+      "generate": 5.377,
+      "paint": 7.132
+    }
+  },
+  "agentLoop": {
+    "file": "captures/agent-loop.mp4",
+    "width": 1920,
+    "height": 1080,
+    "durationSeconds": 25.633,
+    "markers": {
+      "ready": 1.745,
+      "prompt": 2.749,
+      "create": 4.452,
+      "patch": 7.068,
+      "validate": 9.179,
+      "play": 10.685,
+      "report": 18.711,
+      "repair": 20.846,
+      "revalidate": 23.057
+    }
+  },
+  "gameplay": {
+    "file": "captures/gameplay.mp4",
+    "width": 1920,
+    "height": 1080,
+    "durationSeconds": 15.6,
+    "markers": {
+      "ready": 1.765,
+      "gameplay": 2.978
+    }
+  },
+  "share": {
+    "file": "captures/share-roundtrip.mp4",
+    "width": 1920,
+    "height": 1080,
+    "durationSeconds": 15.233,
+    "markers": {
+      "ready": 1.762,
+      "share": 2.778,
+      "open_link": 4.684,
+      "shared_play": 9.524
+    }
+  },
+  "mobile": {
+    "file": "captures/mobile-play.mp4",
+    "width": 540,
+    "height": 960,
+    "durationSeconds": 8.067,
+    "markers": {
+      "ready": 1.769,
+      "mobile_play": 2.786
+    }
+  }
+}

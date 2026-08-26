@@ -8,6 +8,10 @@ VibeTide Live is a colorful 2D platformer and instant level maker. Run, jump, do
 [![CI](https://github.com/banjtheman/vibe_tide_live/actions/workflows/ci.yml/badge.svg)](https://github.com/banjtheman/vibe_tide_live/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/Code-MIT-58416C.svg)](LICENSE)
 
+The repository also includes the complete, reproducible source for the 2:16
+[WebMCP Challenge competition video](video/README.md), including genuine app
+captures, timed narration, captions, audio mastering, and upload materials.
+
 ## Play now
 
 [Launch the public game](https://vibetide-live.banjtheman.chatgpt.site), press **Play level**, and guide the headphone-wearing otter to the finish buoy. Use the arrow keys or WASD to move, Space to jump, or the touch controls on mobile.
