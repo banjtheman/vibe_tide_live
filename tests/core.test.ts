@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   LEVEL_CODEC_PREFIX,
+  TILE_DEFINITIONS,
+  TILE_IDS,
   LevelCodecError,
   LevelStore,
   clusterDeaths,
@@ -16,6 +18,16 @@ import {
   type PlaytestEvent,
   type StorageLike,
 } from "../src/core";
+
+describe("builder piece definitions", () => {
+  it("gives every paintable piece a short consumer-facing explanation", () => {
+    for (const tile of TILE_IDS) {
+      expect(TILE_DEFINITIONS[tile].category.length).toBeGreaterThan(0);
+      expect(TILE_DEFINITIONS[tile].description.length).toBeGreaterThan(20);
+      expect(TILE_DEFINITIONS[tile].description.length).toBeLessThanOrEqual(80);
+    }
+  });
+});
 
 class MemoryStorage implements StorageLike {
   readonly values = new Map<string, string>();

@@ -4,6 +4,7 @@ import type { LevelDocument, TileId } from "../src/core/contracts";
 import {
   cellCenter,
   findLeftmostStandableCell,
+  findPlayerSpawnCell,
   isHazardTile,
   isSolidTile,
   levelPixelBounds,
@@ -67,6 +68,26 @@ describe("findLeftmostStandableCell", () => {
 
   it("returns null when the level has no valid standing space", () => {
     expect(findLeftmostStandableCell(level([[0, 0], [5, 7]]))).toBeNull();
+  });
+});
+
+describe("findPlayerSpawnCell", () => {
+  it("prefers an inset spawn so wide character art stays on screen", () => {
+    const document = level([
+      [0, 0, 0],
+      [1, 1, 1],
+    ]);
+
+    expect(findPlayerSpawnCell(document)).toEqual({ x: 1, y: 0 });
+  });
+
+  it("falls back to the edge for narrow legacy layouts", () => {
+    const document = level([
+      [0, 7],
+      [1, 7],
+    ]);
+
+    expect(findPlayerSpawnCell(document)).toEqual({ x: 0, y: 0 });
   });
 });
 

@@ -4,7 +4,7 @@ import type { GridPoint, LevelDocument, StudioSnapshot, TileId } from "../core/c
 import {
   DEFAULT_TILE_SIZE,
   cellCenter,
-  findLeftmostStandableCell,
+  findPlayerSpawnCell,
   isSolidTile,
   levelPixelBounds,
   tileAt,
@@ -18,6 +18,7 @@ import {
   type EnemySpawn,
 } from "./enemies";
 import type { SharedControlState } from "./input";
+import { aimedProjectileVelocity, alignSpriteFeetToSurface } from "./runtimeMath";
 import {
   OPTIONAL_BACKGROUND_KEY,
   OPTIONAL_OTTER_KEY,
@@ -48,7 +49,9 @@ const COYOTE_WINDOW_MS = 110;
 const JUMP_BUFFER_MS = 130;
 const CRAWLER_SPEED = 88;
 const FLYER_SPEED = 72;
-const TIDE_PEARL_SPEED = 245;
+const TIDE_PEARL_SPEED = 360;
+const TIDE_PEARL_COLLISION_GRACE_MS = 120;
+const TIDE_PEARL_LIFETIME_MS = 3_200;
 const ENEMY_RESPAWN_MS = 2_800;
 
 interface EnemyRuntimeState {
@@ -290,13 +293,13 @@ export class VibeTideScene extends Phaser.Scene {
   }
 
   private centerPreviewOnSpawn(level: LevelDocument): void {
-    this.spawnCell = findLeftmostStandableCell(level) ?? this.findFallbackSpawn(level);
+    this.spawnCell = findPlayerSpawnCell(level) ?? this.findFallbackSpawn(level);
     const spawn = cellCenter(this.spawnCell);
     this.cameras.main.centerOn(spawn.x, spawn.y);
   }
 
   private createPlayer(level: LevelDocument): void {
-    this.spawnCell = findLeftmostStandableCell(level) ?? this.findFallbackSpawn(level);
+    this.spawnCell = findPlayerSpawnCell(level) ?? this.findFallbackSpawn(level);
     const spawn = cellCenter(this.spawnCell);
     const hasAnimatedOtter = this.textures.exists(V1_OTTER_ATLAS_KEY);
     const playerTexture = hasAnimatedOtter
@@ -318,6 +321,7 @@ export class VibeTideScene extends Phaser.Scene {
     } else {
       this.player.setBodySize(this.player.width * 0.72, this.player.height * 0.84, true);
     }
+    this.placePlayerAtSpawn();
     this.player.setDepth(12);
     this.player.setBounce(0);
     this.player.setCollideWorldBounds(false);
@@ -340,7 +344,25 @@ export class VibeTideScene extends Phaser.Scene {
 
     const camera = this.cameras.main;
     camera.startFollow(this.player, true, 0.13, 0.17);
-    camera.centerOn(spawn.x, spawn.y);
+    camera.centerOn(this.player.x, this.player.y);
+  }
+
+  private placePlayerAtSpawn(): void {
+    if (this.player === null) {
+      return;
+    }
+
+    const spawn = cellCenter(this.spawnCell);
+    this.player.setPosition(spawn.x, spawn.y);
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    body.updateFromGameObject();
+
+    const supportTop = (this.spawnCell.y + 1) * DEFAULT_TILE_SIZE;
+    const bodyBottomOffsetFromSpriteCenter = body.bottom - this.player.y;
+    this.player.setY(
+      alignSpriteFeetToSurface(supportTop, bodyBottomOffsetFromSpriteCenter),
+    );
+    body.updateFromGameObject();
   }
 
   private ensurePlayerAnimations(): void {
@@ -429,9 +451,20 @@ export class VibeTideScene extends Phaser.Scene {
 
     if (this.solids !== null) {
       this.physics.add.collider(this.enemies, this.solids);
-      this.physics.add.collider(this.projectiles, this.solids, (projectile) => {
-        this.destroyProjectile(projectile as Phaser.Physics.Arcade.Sprite);
-      });
+      this.physics.add.collider(
+        this.projectiles,
+        this.solids,
+        (projectile) => {
+          this.destroyProjectile(projectile as Phaser.Physics.Arcade.Sprite);
+        },
+        (projectile) => {
+          const collisionAt = (projectile as Phaser.Physics.Arcade.Sprite).getData(
+            "solidCollisionAt",
+          );
+          return typeof collisionAt !== "number" || this.time.now >= collisionAt;
+        },
+        this,
+      );
     }
     if (this.hazards !== null) {
       this.physics.add.overlap(this.enemies, this.hazards, (enemy) => {
@@ -612,21 +645,40 @@ export class VibeTideScene extends Phaser.Scene {
       }
     });
 
-    const projectile = this.physics.add.sprite(
-      enemy.x + direction * 28,
-      enemy.y - 1,
-      PROCEDURAL_TEXTURES.tidePearl,
+    const player = this.player;
+    if (player === null || !player.active) {
+      return;
+    }
+
+    const enemyBody = enemy.body as Phaser.Physics.Arcade.Body;
+    const playerBody = player.body as Phaser.Physics.Arcade.Body;
+    const muzzle = {
+      x: enemyBody.center.x + direction * (enemyBody.halfWidth + 13),
+      y: enemyBody.center.y - enemyBody.halfHeight * 0.2,
+    };
+    const velocity = aimedProjectileVelocity(
+      muzzle,
+      playerBody.center,
+      direction,
+      TIDE_PEARL_SPEED,
+      DEFAULT_TILE_SIZE * 3,
+      DEFAULT_TILE_SIZE,
     );
-    projectile.setDisplaySize(20, 20);
-    projectile.setBodySize(14, 14, true);
+    const projectile = this.projectiles.create(
+      muzzle.x,
+      muzzle.y,
+      PROCEDURAL_TEXTURES.tidePearl,
+    ) as Phaser.Physics.Arcade.Sprite;
+    projectile.setDisplaySize(26, 22);
+    projectile.setBodySize(12, 12, true);
     projectile.setDepth(11);
     projectile.setGravityY(0);
-    projectile.setVelocityX(direction * TIDE_PEARL_SPEED);
-    projectile.setAngularVelocity(direction * 220);
+    projectile.setVelocity(velocity.x, velocity.y);
+    projectile.setRotation(Math.atan2(velocity.y, velocity.x));
     const body = projectile.body as Phaser.Physics.Arcade.Body;
     body.allowGravity = false;
-    this.projectiles.add(projectile);
-    this.projectileExpirations.set(projectile, time + 3_200);
+    projectile.setData("solidCollisionAt", time + TIDE_PEARL_COLLISION_GRACE_MS);
+    this.projectileExpirations.set(projectile, time + TIDE_PEARL_LIFETIME_MS);
   }
 
   private updateProjectiles(time: number): void {
@@ -840,9 +892,10 @@ export class VibeTideScene extends Phaser.Scene {
         return;
       }
 
-      const spawn = cellCenter(this.spawnCell);
       this.resetEnemyPopulation();
+      const spawn = cellCenter(this.spawnCell);
       this.player.enableBody(true, spawn.x, spawn.y, true, true);
+      this.placePlayerAtSpawn();
       this.player.clearTint();
       this.player.setVelocity(0, 0);
       this.player.setAcceleration(0, 0);

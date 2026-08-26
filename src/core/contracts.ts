@@ -4,18 +4,76 @@ export const TILE_IDS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 export type TileId = (typeof TILE_IDS)[number];
 
 export const TILE_DEFINITIONS = {
-  0: { name: "air", behavior: "empty" },
-  1: { name: "dune grass", behavior: "solid" },
-  2: { name: "reef rock", behavior: "solid" },
-  3: { name: "finish buoy", behavior: "goal" },
-  4: { name: "sea glass", behavior: "slippery" },
-  5: { name: "hot vent", behavior: "hazard" },
-  6: { name: "coral spikes", behavior: "hazard" },
-  7: { name: "deep water", behavior: "hazard" },
-  8: { name: "reef crawler", behavior: "enemy" },
-  9: { name: "swell-wing", behavior: "enemy" },
-  10: { name: "tide-spitter", behavior: "enemy" },
-} as const satisfies Record<TileId, { name: string; behavior: string }>;
+  0: {
+    name: "air",
+    behavior: "empty",
+    category: "Eraser",
+    description: "Erase a piece and leave open space for jumps and movement.",
+  },
+  1: {
+    name: "dune grass",
+    behavior: "solid",
+    category: "Solid ground",
+    description: "Safe, solid ground the otter can run and jump on.",
+  },
+  2: {
+    name: "reef rock",
+    behavior: "solid",
+    category: "Solid block",
+    description: "A sturdy block for building walls, floors, and platforms.",
+  },
+  3: {
+    name: "finish buoy",
+    behavior: "goal",
+    category: "Goal",
+    description: "Reach this buoy to finish the level.",
+  },
+  4: {
+    name: "sea glass",
+    behavior: "slippery",
+    category: "Slippery ground",
+    description: "Solid ground that makes stopping and turning harder.",
+  },
+  5: {
+    name: "hot vent",
+    behavior: "hazard",
+    category: "Hazard",
+    description: "Touching this dangerous vent sends the otter back to the start.",
+  },
+  6: {
+    name: "coral spikes",
+    behavior: "hazard",
+    category: "Hazard",
+    description: "Sharp coral that sends the otter back to the start on contact.",
+  },
+  7: {
+    name: "deep water",
+    behavior: "hazard",
+    category: "Hazard",
+    description: "Falling into deep water sends the otter back to the start.",
+  },
+  8: {
+    name: "reef crawler",
+    behavior: "enemy",
+    category: "Ground enemy",
+    description: "Patrols its platform. Land on it to defeat it.",
+  },
+  9: {
+    name: "swell-wing",
+    behavior: "enemy",
+    category: "Flying enemy",
+    description: "Glides through the air. Land on it to defeat it.",
+  },
+  10: {
+    name: "tide-spitter",
+    behavior: "enemy",
+    category: "Ranged enemy",
+    description: "Fires tide pearls toward the otter. Land on it to defeat it.",
+  },
+} as const satisfies Record<
+  TileId,
+  { name: string; behavior: string; category: string; description: string }
+>;
 
 export type Difficulty = "beginner" | "moderate" | "tricky";
 export type PrimaryMechanic = "platforming" | "ice" | "spikes" | "water" | "mixed";

@@ -54,12 +54,35 @@ function formatDuration(milliseconds: number): string {
 
 function makePaletteMarkup(): string {
   return TILE_IDS.map(
-    (tile) => `
-      <button class="palette__item" type="button" data-brush="${tile}" aria-pressed="${tile === 1 ? "true" : "false"}">
+    (tile) => {
+      const definition = TILE_DEFINITIONS[tile];
+      return `
+      <button class="palette__item" type="button" data-brush="${tile}" aria-pressed="${tile === 1 ? "true" : "false"}" aria-describedby="tile-description-${tile}" title="${definition.description}">
         <span class="tile-swatch tile--${tile}" aria-hidden="true"></span>
-        <span class="palette__label">${TILE_DEFINITIONS[tile].name}</span>
-      </button>`,
+        <span class="palette__copy">
+          <span class="palette__label">${definition.name}</span>
+          <span class="palette__kind" aria-hidden="true">${definition.category}</span>
+        </span>
+        <span class="palette__selected" aria-hidden="true">✓</span>
+        <span class="sr-only" id="tile-description-${tile}">${definition.description}</span>
+      </button>`;
+    },
   ).join("");
+}
+
+function makePieceGuideMarkup(tile: TileId): string {
+  const definition = TILE_DEFINITIONS[tile];
+  return `
+    <div class="piece-guide" data-piece-guide>
+      <span class="tile-swatch piece-guide__swatch tile--${tile}" data-piece-swatch aria-hidden="true"></span>
+      <div class="piece-guide__copy">
+        <div class="piece-guide__heading">
+          <strong data-piece-name>${definition.name}</strong>
+          <span class="piece-guide__kind" data-piece-kind>${definition.category}</span>
+        </div>
+        <p data-piece-description>${definition.description}</p>
+      </div>
+    </div>`;
 }
 
 export function mountStudioUI(
@@ -125,9 +148,10 @@ export function mountStudioUI(
 
           <section class="rail__section">
             <p class="eyebrow">Build pieces</p>
-            <h2 class="section-title">Pick, then paint</h2>
-            <p class="section-copy palette-intro">Choose a piece and drag it across the level.</p>
-            <div class="palette" aria-label="Tile palette">${makePaletteMarkup()}</div>
+            <h2 class="section-title" id="piece-picker-title">Pick, then paint</h2>
+            <p class="section-copy palette-intro">Choose a piece to see what it does, then drag it across the level.</p>
+            ${makePieceGuideMarkup(1)}
+            <div class="palette" role="group" aria-labelledby="piece-picker-title">${makePaletteMarkup()}</div>
           </section>
 
           <section class="rail__section">
@@ -235,6 +259,10 @@ export function mountStudioUI(
   const mechanicInput = requireElement<HTMLSelectElement>(root, '[data-field="primaryMechanic"]');
   const modeButtons = [...root.querySelectorAll<HTMLButtonElement>("[data-mode]")];
   const paletteButtons = [...root.querySelectorAll<HTMLButtonElement>("[data-brush]")];
+  const pieceSwatch = requireElement<HTMLElement>(root, "[data-piece-swatch]");
+  const pieceName = requireElement<HTMLElement>(root, "[data-piece-name]");
+  const pieceKind = requireElement<HTMLElement>(root, "[data-piece-kind]");
+  const pieceDescription = requireElement<HTMLElement>(root, "[data-piece-description]");
   const playButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-action="play"], [data-mode="play"]')];
   const topPlayButton = requireElement<HTMLButtonElement>(root, '[data-action="play"]');
   const undoButton = requireElement<HTMLButtonElement>(root, '[data-action="undo"]');
@@ -243,6 +271,15 @@ export function mountStudioUI(
   let renderedRevision = -1;
   let unsubscribe: (() => void) | null = null;
   let toastSequence = 0;
+  let selectedBrush: TileId = 1;
+
+  const showPieceGuide = (tile: TileId): void => {
+    const definition = TILE_DEFINITIONS[tile];
+    pieceSwatch.className = `tile-swatch piece-guide__swatch tile--${tile}`;
+    pieceName.textContent = definition.name;
+    pieceKind.textContent = definition.category;
+    pieceDescription.textContent = definition.description;
+  };
 
   const showToast = (message: string): void => {
     const toast = document.createElement("div");
@@ -357,10 +394,20 @@ export function mountStudioUI(
   });
 
   paletteButtons.forEach((button) => {
+    const tile = Number(button.dataset.brush) as TileId;
+    button.addEventListener("pointerenter", () => {
+      if (TILE_IDS.includes(tile)) showPieceGuide(tile);
+    });
+    button.addEventListener("pointerleave", () => showPieceGuide(selectedBrush));
+    button.addEventListener("focus", () => {
+      if (TILE_IDS.includes(tile)) showPieceGuide(tile);
+    });
+    button.addEventListener("blur", () => showPieceGuide(selectedBrush));
     button.addEventListener("click", () => {
-      const tile = Number(button.dataset.brush) as TileId;
       if (!TILE_IDS.includes(tile)) return;
+      selectedBrush = tile;
       editor.setBrush(tile);
+      showPieceGuide(tile);
       paletteButtons.forEach((candidate) => candidate.setAttribute("aria-pressed", String(candidate === button)));
     });
   });

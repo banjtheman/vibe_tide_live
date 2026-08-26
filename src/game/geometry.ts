@@ -41,7 +41,22 @@ export function tileAt(level: LevelDocument, x: number, y: number): TileId | und
  * player starts on the floor instead of a decorative ledge.
  */
 export function findLeftmostStandableCell(level: LevelDocument): GridPoint | null {
-  for (let x = 0; x < level.width; x += 1) {
+  return findStandableCellFromColumn(level, 0);
+}
+
+/**
+ * Picks a player spawn with one column of visual breathing room when possible.
+ * Legacy/narrow levels still fall back to the true leftmost standable cell.
+ */
+export function findPlayerSpawnCell(level: LevelDocument): GridPoint | null {
+  return findStandableCellFromColumn(level, 1) ?? findLeftmostStandableCell(level);
+}
+
+function findStandableCellFromColumn(
+  level: LevelDocument,
+  startingColumn: number,
+): GridPoint | null {
+  for (let x = startingColumn; x < level.width; x += 1) {
     for (let y = level.height - 2; y >= 0; y -= 1) {
       if (tileAt(level, x, y) === 0 && isSolidTile(tileAt(level, x, y + 1))) {
         return { x, y };

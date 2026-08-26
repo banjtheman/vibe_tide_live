@@ -13,6 +13,7 @@ export {
   DEFAULT_TILE_SIZE,
   cellCenter,
   findLeftmostStandableCell,
+  findPlayerSpawnCell,
   isHazardTile,
   isSolidTile,
   levelPixelBounds,

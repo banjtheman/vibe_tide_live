@@ -44,8 +44,15 @@ export function queueOptionalVibeTideAssets(scene: Phaser.Scene): void {
 
 export function ensureProceduralTextures(scene: Phaser.Scene): void {
   createTexture(scene, PROCEDURAL_TEXTURES.background, BACKDROP_SIZE, BACKDROP_SIZE, (pen) => {
-    pen.fillGradientStyle(0x73cdd2, 0x8cddd8, 0xf7d58f, 0xf2bc72, 1);
-    pen.fillRect(0, 0, BACKDROP_SIZE, BACKDROP_SIZE);
+    // `Graphics.fillGradientStyle` is WebGL-only and does not survive
+    // `generateTexture` in the Canvas renderer used by the game. Layered,
+    // opaque bands keep the fallback backdrop deterministic in both renderers.
+    pen.fillStyle(0x73cdd2, 1);
+    pen.fillRect(0, 0, BACKDROP_SIZE, 180);
+    pen.fillStyle(0xa7dcca, 1);
+    pen.fillRect(0, 180, BACKDROP_SIZE, 104);
+    pen.fillStyle(0xf4ce87, 1);
+    pen.fillRect(0, 284, BACKDROP_SIZE, 228);
 
     pen.fillStyle(0xffe6a8, 0.8);
     pen.fillCircle(410, 94, 58);
@@ -76,104 +83,129 @@ export function ensureProceduralTextures(scene: Phaser.Scene): void {
   });
 
   createTexture(scene, PROCEDURAL_TEXTURES.grass, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, (pen) => {
-    pen.fillGradientStyle(0xd79a55, 0xe9b767, 0xb76f40, 0xc98148, 1);
-    pen.fillRect(0, 0, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE);
-    pen.fillStyle(0xf0cb79, 0.34);
+    fillOpaqueTile(pen, 0xc87943);
+    pen.fillStyle(0xe8ad61, 1);
+    pen.fillRect(3, 12, DEFAULT_TILE_SIZE - 6, 16);
+    pen.fillStyle(0xb96239, 1);
+    pen.fillRect(3, 28, DEFAULT_TILE_SIZE - 6, DEFAULT_TILE_SIZE - 31);
+    pen.fillStyle(0xf3cc77, 1);
     pen.fillCircle(10, 22, 3);
     pen.fillCircle(34, 34, 4);
-    pen.fillCircle(22, 43, 2);
-    pen.fillStyle(0x2c8d73);
-    pen.fillRoundedRect(0, 0, DEFAULT_TILE_SIZE, 10, 4);
-    pen.fillStyle(0x66bd7d);
-    pen.fillTriangle(3, 9, 9, 0, 13, 9);
-    pen.fillTriangle(18, 9, 24, 1, 29, 9);
-    pen.fillTriangle(35, 9, 40, 2, 46, 9);
-    pen.lineStyle(2, 0x8d5638, 0.45);
-    pen.strokeRoundedRect(1, 1, DEFAULT_TILE_SIZE - 2, DEFAULT_TILE_SIZE - 2, 5);
+    pen.fillCircle(22, 42, 2);
+    pen.fillStyle(0x1f786d, 1);
+    pen.fillRect(2, 2, DEFAULT_TILE_SIZE - 4, 11);
+    pen.fillStyle(0x71cf8a, 1);
+    pen.fillTriangle(3, 12, 9, 2, 14, 12);
+    pen.fillTriangle(17, 12, 24, 3, 30, 12);
+    pen.fillTriangle(34, 12, 40, 3, 46, 12);
+    strokeOpaqueTile(pen, 0x174a4c);
   });
 
   createTexture(scene, PROCEDURAL_TEXTURES.rock, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, (pen) => {
-    pen.fillGradientStyle(0x306775, 0x3d7c84, 0x214d60, 0x295767, 1);
-    pen.fillRoundedRect(0, 0, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, 6);
-    pen.fillStyle(0x6ca0a0, 0.45);
-    pen.fillTriangle(4, 5, 27, 3, 18, 21);
+    fillOpaqueTile(pen, 0x275b68);
+    pen.fillStyle(0x477f86, 1);
+    pen.fillRect(3, 3, DEFAULT_TILE_SIZE - 6, 21);
+    pen.fillStyle(0x1d495b, 1);
+    pen.fillRect(3, 24, DEFAULT_TILE_SIZE - 6, DEFAULT_TILE_SIZE - 27);
+    pen.fillStyle(0x78aaa3, 1);
+    pen.fillTriangle(4, 5, 28, 4, 18, 22);
+    pen.fillStyle(0x3a7379, 1);
     pen.fillTriangle(28, 24, 46, 13, 44, 37);
-    pen.fillStyle(0x173e50, 0.48);
+    pen.fillStyle(0x173e50, 1);
     pen.fillTriangle(3, 42, 20, 25, 28, 47);
-    pen.lineStyle(2, 0x9ec4b6, 0.25);
-    pen.strokeRoundedRect(1, 1, DEFAULT_TILE_SIZE - 2, DEFAULT_TILE_SIZE - 2, 6);
+    pen.lineStyle(2, 0xa8d2bd, 1);
+    pen.lineBetween(6, 7, 25, 6);
+    strokeOpaqueTile(pen, 0x123b4b);
   });
 
   createTexture(scene, PROCEDURAL_TEXTURES.goal, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, (pen) => {
     pen.lineStyle(4, 0x305a68, 1);
     pen.lineBetween(24, 15, 24, 46);
-    pen.fillStyle(0xff724c);
+    pen.fillStyle(0xff724c, 1);
     pen.fillRoundedRect(11, 5, 26, 24, 11);
-    pen.fillStyle(0xfff4d6);
+    pen.fillStyle(0xfff4d6, 1);
     pen.fillRect(12, 13, 24, 7);
-    pen.fillStyle(0xffa25c, 0.9);
+    pen.fillStyle(0xffa25c, 1);
     pen.fillCircle(24, 7, 4);
-    pen.fillStyle(0x1b7180, 0.86);
+    pen.fillStyle(0x1b7180, 1);
     pen.fillEllipse(24, 44, 27, 6);
   });
 
   createTexture(scene, PROCEDURAL_TEXTURES.ice, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, (pen) => {
-    pen.fillGradientStyle(0xc8f6ed, 0xb1e8e9, 0x6fcbd7, 0x78d3da, 1);
-    pen.fillRoundedRect(0, 0, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, 6);
-    pen.fillStyle(0xffffff, 0.55);
+    fillOpaqueTile(pen, 0x55b7c7);
+    pen.fillStyle(0xbdeee8, 1);
+    pen.fillRect(3, 3, DEFAULT_TILE_SIZE - 6, 21);
+    pen.fillStyle(0x6fcbd7, 1);
+    pen.fillRect(3, 24, DEFAULT_TILE_SIZE - 6, DEFAULT_TILE_SIZE - 27);
+    pen.fillStyle(0xffffff, 1);
     pen.fillTriangle(5, 8, 33, 4, 12, 24);
-    pen.lineStyle(2, 0xe9fffa, 0.76);
+    pen.fillStyle(0x9ee9e5, 1);
+    pen.fillTriangle(18, 42, 42, 18, 43, 43);
+    pen.lineStyle(2, 0xe9fffa, 1);
     pen.lineBetween(4, 10, 43, 10);
     pen.lineBetween(13, 29, 22, 21);
     pen.lineBetween(22, 21, 31, 29);
-    pen.lineStyle(2, 0x318eaa, 0.4);
-    pen.strokeRoundedRect(1, 1, DEFAULT_TILE_SIZE - 2, DEFAULT_TILE_SIZE - 2, 6);
+    strokeOpaqueTile(pen, 0x237b91);
   });
 
   createTexture(scene, PROCEDURAL_TEXTURES.vent, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, (pen) => {
-    pen.fillGradientStyle(0x443f50, 0x584552, 0x252e40, 0x303144, 1);
-    pen.fillRoundedRect(1, 13, 46, 35, 7);
-    pen.fillStyle(0xff6845, 0.9);
+    fillOpaqueTile(pen, 0x292f43);
+    pen.fillStyle(0x574853, 1);
+    pen.fillRect(3, 14, DEFAULT_TILE_SIZE - 6, 15);
+    pen.fillStyle(0x252e40, 1);
+    pen.fillRect(3, 29, DEFAULT_TILE_SIZE - 6, 16);
+    pen.fillStyle(0x511f35, 1);
+    pen.fillRect(3, 3, DEFAULT_TILE_SIZE - 6, 12);
+    pen.fillStyle(0xff6845, 1);
     pen.fillTriangle(7, 22, 13, 1, 19, 22);
     pen.fillTriangle(18, 22, 25, 5, 31, 22);
     pen.fillTriangle(29, 22, 37, 0, 42, 22);
-    pen.fillStyle(0xffbf5f, 0.9);
+    pen.fillStyle(0xffc45f, 1);
     pen.fillTriangle(11, 21, 14, 10, 17, 21);
     pen.fillTriangle(23, 21, 26, 13, 29, 21);
-    pen.lineStyle(2, 0x161e2e, 0.65);
+    pen.lineStyle(2, 0x151d2d, 1);
     pen.lineBetween(6, 32, 42, 32);
     pen.lineBetween(10, 40, 38, 40);
+    strokeOpaqueTile(pen, 0x141d2b);
   });
 
   createTexture(scene, PROCEDURAL_TEXTURES.coral, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, (pen) => {
-    pen.fillStyle(0xd89a57);
-    pen.fillRect(0, 36, DEFAULT_TILE_SIZE, 12);
-    pen.fillStyle(0xf45f68);
+    fillOpaqueTile(pen, 0xc85f52);
+    pen.fillStyle(0xe7a35e, 1);
+    pen.fillRect(3, 3, DEFAULT_TILE_SIZE - 6, DEFAULT_TILE_SIZE - 6);
+    pen.fillStyle(0xf45f68, 1);
     pen.fillTriangle(1, 38, 8, 8, 15, 38);
     pen.fillTriangle(11, 38, 20, 0, 28, 38);
     pen.fillTriangle(24, 38, 33, 11, 40, 38);
     pen.fillTriangle(35, 38, 43, 5, 48, 38);
-    pen.fillStyle(0xffa069, 0.76);
+    pen.fillStyle(0xffc071, 1);
     pen.fillTriangle(6, 35, 9, 19, 12, 35);
     pen.fillTriangle(28, 35, 33, 21, 37, 35);
+    pen.fillStyle(0xa94150, 1);
+    pen.fillRect(3, 38, DEFAULT_TILE_SIZE - 6, 7);
+    strokeOpaqueTile(pen, 0x743b46);
   });
 
   createTexture(scene, PROCEDURAL_TEXTURES.deepWater, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, (pen) => {
-    pen.fillGradientStyle(0x166b7a, 0x207f87, 0x0f405d, 0x123752, 1);
-    pen.fillRect(0, 0, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE);
-    pen.lineStyle(3, 0x83ddd0, 0.8);
+    fillOpaqueTile(pen, 0x0d3d5a);
+    pen.fillStyle(0x197581, 1);
+    pen.fillRect(3, 3, DEFAULT_TILE_SIZE - 6, 21);
+    pen.fillStyle(0x103f5c, 1);
+    pen.fillRect(3, 24, DEFAULT_TILE_SIZE - 6, DEFAULT_TILE_SIZE - 27);
+    pen.lineStyle(3, 0x83ddd0, 1);
     pen.beginPath();
-    pen.moveTo(0, 8);
+    pen.moveTo(3, 9);
     pen.lineTo(8, 4);
     pen.lineTo(16, 8);
     pen.lineTo(24, 4);
     pen.lineTo(32, 8);
     pen.lineTo(40, 4);
-    pen.lineTo(48, 8);
+    pen.lineTo(45, 8);
     pen.strokePath();
-    pen.lineStyle(2, 0x5ab8b7, 0.28);
+    pen.lineStyle(2, 0x5ab8b7, 1);
     pen.lineBetween(8, 23, 32, 23);
     pen.lineBetween(19, 36, 44, 36);
+    strokeOpaqueTile(pen, 0x092f4a);
   });
 
   createTexture(scene, PROCEDURAL_TEXTURES.player, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE, (pen) => {
@@ -203,11 +235,15 @@ export function ensureProceduralTextures(scene: Phaser.Scene): void {
     pen.lineBetween(16, 33, 9, 43);
     pen.lineBetween(35, 28, 44, 36);
     pen.lineBetween(32, 33, 39, 43);
-    pen.fillStyle(0x163f48, 0.34);
+    pen.fillStyle(0x163f48, 1);
     pen.fillEllipse(24, 40, 34, 6);
-    pen.fillGradientStyle(0x42b7a1, 0x54c8a6, 0x24747b, 0x2e8b82, 1);
+    pen.fillStyle(0x42b7a1, 1);
     pen.fillRoundedRect(9, 17, 30, 21, 10);
-    pen.fillStyle(0xf2a65e);
+    pen.fillStyle(0x28757b, 1);
+    pen.fillRoundedRect(11, 29, 26, 7, 4);
+    pen.lineStyle(2, 0x173641, 1);
+    pen.strokeRoundedRect(9, 17, 30, 21, 10);
+    pen.fillStyle(0xf2a65e, 1);
     pen.fillTriangle(15, 19, 8, 7, 22, 17);
     pen.fillTriangle(33, 19, 40, 7, 27, 17);
     pen.fillStyle(0xf8eed2);
@@ -305,14 +341,20 @@ export function ensureProceduralTextures(scene: Phaser.Scene): void {
   });
 
   createTexture(scene, PROCEDURAL_TEXTURES.tidePearl, 20, 20, (pen) => {
-    pen.fillStyle(0x0d5368, 0.3);
-    pen.fillCircle(11, 12, 8);
-    pen.fillStyle(0x54d8dc);
-    pen.fillCircle(10, 10, 8);
-    pen.fillStyle(0xe8fff2, 0.92);
-    pen.fillCircle(7, 7, 3);
-    pen.lineStyle(2, 0x237f9b, 0.82);
-    pen.strokeCircle(10, 10, 8);
+    // Strong, fully opaque comet silhouette so it reads clearly while crossing
+    // the illustrated backdrop; the runtime controls its travel direction.
+    pen.fillStyle(0x123f59, 1);
+    pen.fillTriangle(0, 10, 11, 2, 11, 18);
+    pen.fillCircle(12, 10, 8);
+    pen.fillStyle(0x2caab9, 1);
+    pen.fillTriangle(3, 10, 12, 5, 12, 15);
+    pen.fillCircle(12, 10, 6);
+    pen.fillStyle(0x8ff3e0, 1);
+    pen.fillCircle(13, 10, 4);
+    pen.fillStyle(0xf8fff1, 1);
+    pen.fillCircle(15, 8, 2);
+    pen.lineStyle(2, 0x123f59, 1);
+    pen.strokeCircle(12, 10, 7);
   });
 }
 
@@ -331,4 +373,14 @@ function createTexture(
   draw(pen);
   pen.generateTexture(key, width, height);
   pen.destroy();
+}
+
+function fillOpaqueTile(pen: Phaser.GameObjects.Graphics, color: number): void {
+  pen.fillStyle(color, 1);
+  pen.fillRect(0, 0, DEFAULT_TILE_SIZE, DEFAULT_TILE_SIZE);
+}
+
+function strokeOpaqueTile(pen: Phaser.GameObjects.Graphics, color: number): void {
+  pen.lineStyle(3, color, 1);
+  pen.strokeRect(1.5, 1.5, DEFAULT_TILE_SIZE - 3, DEFAULT_TILE_SIZE - 3);
 }
