@@ -1,72 +1,77 @@
 # VibeTide Live
 
-**A live 2D platformer where players and their agents build, play, and remix the same level on the same page.**
+**Play it. Build it. Share the tide.**
 
-VibeTide Live is a fresh Phaser implementation of the original VibeTide idea, built for the 2026 WebMCP Challenge. There is deliberately no chatbot inside the app. A WebMCP-capable browser discovers the page’s structured level-design tools, so ChatGPT or Codex can create a playable route, revise exact tiles, start the game, inspect playtest telemetry, and produce a share link without guessing through the visual UI.
+VibeTide Live is a colorful 2D platformer and instant level maker. Run, jump, dodge reef creatures, paint your own route, or ask a visiting agent to build one from a plain-English idea. Every change lands in the same playable level—no exports, rebuilds, or chatbot panel required.
 
-![VibeTide coastal art](public/assets/vibetide-background.webp)
+[![Play VibeTide Live](https://img.shields.io/badge/Play-VibeTide%20Live-22B8A7?style=for-the-badge)](https://vibetide-live.banjtheman.chatgpt.site)
+[![CI](https://github.com/banjtheman/vibe_tide_live/actions/workflows/ci.yml/badge.svg)](https://github.com/banjtheman/vibe_tide_live/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/Code-MIT-58416C.svg)](LICENSE)
 
-## The loop
+## Play now
 
-1. A person asks their visiting agent for a level in ordinary language.
-2. The agent calls `create_level_from_blueprint` and `validate_level`.
-3. The new route appears instantly in the visual editor.
-4. The person plays it immediately—no export or rebuild step.
-5. Deaths and completion are recorded as structured playtest telemetry.
-6. The agent reads the report, patches the problem area, and hands back a new revision.
-7. Either collaborator can undo or create a compact playable URL.
+[Launch the public game](https://vibetide-live.banjtheman.chatgpt.site), press **Play level**, and guide the headphone-wearing otter to the finish buoy. Use the arrow keys or WASD to move, Space to jump, or the touch controls on mobile.
 
-That closed loop is the point: WebMCP turns a game editor into a shared creative surface, not a form an agent fills out on someone’s behalf.
+![An agent-created VibeTide level running in play mode](docs/screenshots/pearlstorm-play.webp)
 
-## What works now
+## Play, build, share
 
-- Deterministic blueprint-to-level generation with platforming, gaps, stairs, sea glass, spikes, and water
-- Atomic tile patches, metadata edits, revision history, undo, and local persistence
-- Conservative structural and reachability validation
-- Phaser 3 side-scrolling runtime with Arcade physics, coyote time, jump buffering, ice momentum, hazards, goals, camera follow, keyboard controls, and mobile touch controls
-- Three placeable enemy families: patrolling reef crawlers, flying swell-wings, and ranged tide-spitters with visible projectiles
-- Playtest sessions with completion, elapsed time, deaths, recent events, and death clustering
-- Compact versioned `vt1.` level codec for playable share URLs
-- Nine imperative WebMCP tools registered directly on `document.modelContext`
-- Responsive, player-first UI with high-contrast manual grid painting and visible human/agent/game activity
-- The upright V1 headphone otter, rebuilt as an eight-frame idle/run/jump/fall animation atlas
+- **Play:** Tackle side-scrolling routes with slippery sea glass, water, vents, spikes, patrolling reef crawlers, flying swell-wings, and projectile-firing tide-spitters.
+- **Build:** Switch to Build mode and paint tiles directly, edit the level’s name and style, validate the route, or undo a change.
+- **Share:** Create a compact link that opens the same playable level for anyone—no account or server save required.
+- **Create with an agent:** In a WebMCP-capable browser, describe the experience you want. The agent can build, validate, playtest, repair, and share it using the tools exposed by the page.
 
-## Page tools
+Try this:
 
-| Tool | Purpose |
-| --- | --- |
-| `inspect_level` | Read metadata, revision, mode, validation, and exact tile rows |
-| `create_level_from_blueprint` | Generate a complete playable level from bounded creative intent |
-| `apply_level_patch` | Atomically set tiles, fill/clear areas, add platforms, or move the goal |
-| `set_level_metadata` | Rename or retune the player-facing level details |
-| `validate_level` | Check spawn, goal, structure, and conservative reachability |
-| `get_playtest_report` | Read completion, timing, deaths, clusters, and recent events |
-| `start_playtest` | Enter play mode and begin a telemetry session |
-| `undo_last_change` | Restore the previous level content as a new revision |
-| `create_share_link` | Encode the current revision into a playable URL |
+> Build me a moderate VibeTide level called Sunset Circuit. Start friendly, introduce slippery sea-glass platforms, add one fair spike challenge and all three enemy types, keep the finish reachable, then start a playtest.
 
-All inputs have narrow JSON Schemas and a second runtime-validation layer. Mutations are bounded, patch batches are atomic, and the registration is torn down with an `AbortController`.
+The game also works as a normal website when WebMCP is unavailable; every player-facing build and play control remains usable by hand.
+
+## The builder
+
+![VibeTide's visual level editor with its tile palette and route grid](docs/screenshots/builder.webp)
+
+The editor describes each tile’s behavior before you paint it: dune grass and reef rock are solid ground, sea glass is slippery, hot vents, coral spikes, and deep water are hazards, and enemy markers place distinct encounters. Agent edits and human edits share one revision history, so both collaborators always see the same state.
+
+## What is inside
+
+- Deterministic blueprint-to-level generation with runs, gaps, stairs, ice, water, hazards, and a reachable finish
+- Phaser 3 side-scrolling play with Arcade physics, coyote time, jump buffering, ice momentum, camera follow, keyboard input, and touch controls
+- An eight-frame idle, run, jump, and fall animation atlas for the upright V1 headphone otter
+- Three enemy families: ground-patrolling reef crawlers, flying swell-wings, and ranged tide-spitters with full-travel projectiles
+- Structural and reachability validation, atomic tile patches, revision history, and undo
+- Playtest reports with completion, elapsed time, deaths, recent events, and death clustering
+- Responsive, high-contrast editing and play surfaces for desktop and mobile
+- A compact, versioned `vt1.` level format for shareable URLs
+
+## WebMCP
+
+VibeTide registers nine structured tools directly on the page: agents can inspect and generate levels, apply precise patches, edit metadata, validate reachability, start and review playtests, undo changes, and create share links. Inputs use narrow JSON Schemas plus runtime validation, while the agent and visual editor operate on the same `LevelStore` snapshot.
+
+See [the WebMCP implementation notes](docs/WEBMCP.md) for the complete tool contract, tile IDs, safety boundaries, and local test harness.
 
 ## Run locally
 
-Requires Node.js 20 or newer.
+Requirements: Node.js 22.13.0 or newer. No API key, database, or backend service is required.
 
 ```bash
-npm install
+git clone https://github.com/banjtheman/vibe_tide_live.git
+cd vibe_tide_live
+npm ci
 npm run dev
 ```
 
-Open `http://localhost:4173/` in ChatGPT’s in-app browser or a compatible experimental browser. Try:
+Open `http://localhost:4173/`.
 
-> Build me a moderate VibeTide level called Sunset Circuit. Start friendly, introduce slippery sea-glass platforms, add one fair spike challenge, keep the goal reachable, then start a playtest.
-
-Useful checks:
+Run the full verification suite and production build:
 
 ```bash
-npm run typecheck
-npm test
+npm run check
 npm run build
+npm run preview
 ```
+
+`npm run check` runs TypeScript checks, unit tests, and the production build.
 
 ## Architecture
 
@@ -78,21 +83,27 @@ WebMCP tools ─┘       │                              │
                      └─> vt1 URL codec <──────────────────────┘
 ```
 
-- `src/core` is framework-free level state, generation, validation, telemetry aggregation, persistence, and encoding.
-- `src/webmcp` is the standards-facing producer layer and its independent input validators.
-- `src/game` is the Phaser runtime and input/physics integration.
-- `src/ui` is the human workbench and manual tile editor.
+- `src/core` contains framework-free level state, generation, validation, telemetry, persistence, and encoding.
+- `src/webmcp` contains the standards-facing tool layer and independent input validators.
+- `src/game` contains the Phaser runtime, enemies, input, and physics integration.
+- `src/ui` contains the human workbench and visual tile editor.
 
-## Browser compatibility
+Levels persist in the browser’s local storage. A share action serializes the current level into the URL, so opening that URL reconstructs the shared snapshot without uploading it to a backend. Playtest telemetry stays local unless a user deliberately shares its result through their agent conversation.
 
-WebMCP is experimental. The ordinary editor and game work without it; the agent tool surface activates only when `document.modelContext` is present. The game intentionally uses Phaser’s Canvas renderer because it is reliable inside embedded agent browsers as well as ordinary desktop and mobile browsers.
+## Compatibility
 
-The implementation follows the current [WebMCP draft](https://webmachinelearning.github.io/webmcp/) and OpenAI’s [site-tools guide](https://learn.chatgpt.com/docs/webmcp).
+WebMCP is experimental. The editor and game run in ordinary modern browsers; the agent tool surface activates only when `document.modelContext` is available. The implementation follows the current [WebMCP draft](https://webmachinelearning.github.io/webmcp/) and OpenAI’s [site-tools guide](https://learn.chatgpt.com/docs/webmcp).
+
+## Art and licensing
+
+The coast, character, animation atlas, and social artwork were created for VibeTide Live with OpenAI ImageGen; the production otter redraw preserves the project’s original upright V1 character and purple headphones. Enemy art is drawn procedurally in Phaser. No Corgi Engine code, Unity package, or third-party game art is included. Generation details and source provenance are documented in [docs/ART.md](docs/ART.md).
+
+Source code is available under the [MIT License](LICENSE). Original and generated art assets have separate terms in [ASSET_LICENSE.md](ASSET_LICENSE.md).
 
 ## Project notes
 
 - [Hackathon strategy and demo script](docs/HACKATHON.md)
-- [WebMCP integration notes](docs/WEBMCP.md)
+- [WebMCP implementation notes](docs/WEBMCP.md)
 - [Art direction and provenance](docs/ART.md)
 
-The repository is intentionally independent from the older Unity, iOS, and MCP experiments. No Corgi Engine code or licensed Unity package is used.
+This repository is intentionally independent from the earlier Unity, iOS, and MCP experiments.

@@ -2,13 +2,10 @@ Tool: OpenAI built-in ImageGen
 Use case: identity-preserve / background-extraction
 
 Identity anchor:
-/Users/banjtheman/Dev/projects/unity_projects/2d_platformer_vibe/Assets/Game/Sprites/vibe_tide_otter.png
+art/source/vibetide-otter.png (repository copy of the original VibeTide otter key art)
 
 Motion references:
-/Users/banjtheman/Dev/projects/unity_projects/vibe_tide_webapp/pixel_lab_playground/vibe_tide_otter_animation_128x128/frames/frame_001.png
-/Users/banjtheman/Dev/projects/unity_projects/vibe_tide_webapp/pixel_lab_playground/vibe_tide_otter_animation_128x128/frames/frame_002.png
-/Users/banjtheman/Dev/projects/unity_projects/vibe_tide_webapp/pixel_lab_playground/vibe_tide_otter_animation_128x128/frames/frame_004.png
-/Users/banjtheman/Dev/projects/unity_projects/vibe_tide_webapp/pixel_lab_playground/vibe_tide_otter_animation_128x128/frames/frame_006.png
+Legacy V1 animation frames 001, 002, 004, and 006 from the earlier VibeTide web build (not redistributed in this repository).
 
 Create a refined animation atlas from the exact original VibeTide V1 otter. Preserve its oversized rounded head, upright biped stance, cream muzzle and belly, large dark-brown eyes, compact paws, long low tail, and exact purple headphones with bright cyan inner rings. Arrange eight consistent right-facing poses in a 4 × 2 atlas: two idle frames, four run frames, jump, and fall. Use polished modern 2D game art with a clean dark-brown contour and subtle hand-painted texture. Keep every sprite fully inside an equal cell with consistent registration and transparent padding. No text, grid, shadows, floor, props, duplicated limbs, missing tail, or character redesign.
 

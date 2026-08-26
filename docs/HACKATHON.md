@@ -56,14 +56,18 @@ Paint one tile manually, use agent undo, and call `create_share_link`. End on: �
 - Original branded coast and an animated eight-frame version of the upright V1 headphone otter
 - Manual paint → shared revision → agent inspection/undo round trip
 - Automated type, core, geometry, and WebMCP tests
+- Public deployment on [OpenAI Sites](https://vibetide-live.banjtheman.chatgpt.site)
+- Production WebMCP round trip from a fresh browser: an agent discovered all nine tools, created and validated **Pearlstorm Passage**, started its playtest, created a share link, and reopened the same level without console errors
 
 ## Remaining submission polish
 
-1. Deploy to a stable HTTPS URL and verify the production origin in ChatGPT’s in-app browser.
-2. Add lightweight sound and two or three tactile effects if they improve play without distracting from the WebMCP story.
-3. Record the concise build → validate → play → repair → share demo.
-4. Add final repository and live-app URLs to Devpost, plus screenshots and the demo video.
-5. Run the same scripted demo from a clean browser profile immediately before submission.
+- [x] Deploy to a stable HTTPS URL and load the production origin in ChatGPT’s in-app browser.
+- [x] Exercise the public WebMCP surface from a fresh browser through create → validate → play → share → reopen.
+- [x] Prepare the public repository with local setup, architecture, screenshots, provenance, and license documentation.
+- [ ] Decide whether lightweight sound or tactile effects improve the game without distracting from the WebMCP story.
+- [ ] Record the concise build → validate → play → repair → share demo.
+- [ ] Add the final project description, live-app URL, repository URL, screenshots, and demo video to Devpost.
+- [ ] Run the scripted demo from a clean browser profile immediately before submission.
 
 ## Submission facts to keep straight
 

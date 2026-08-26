@@ -4,6 +4,15 @@
   "version": "0.1.0",
   "description": "An agent-native 2D platformer workbench built with WebMCP and Phaser.",
   "type": "module",
+  "license": "MIT",
+  "homepage": "https://vibetide-live.banjtheman.chatgpt.site",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/banjtheman/vibe_tide_live.git"
+  },
+  "bugs": {
+    "url": "https://github.com/banjtheman/vibe_tide_live/issues"
+  },
   "scripts": {
     "check": "npm run typecheck && npm test && npm run build",
     "dev": "vite --host 0.0.0.0",

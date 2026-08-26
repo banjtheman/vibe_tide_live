@@ -5,3 +5,11 @@ coverage/
 *.local
 *.tsbuildinfo
 .wrangler/
+.vite/
+.hallmark/
+.env
+.env.*
+!.env.example
+*.log
+test-results/
+playwright-report/
