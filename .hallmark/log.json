@@ -1,0 +1,14 @@
+[
+  {
+    "date": "2026-08-26",
+    "macrostructure": "Workbench",
+    "theme": "Plume",
+    "enrichment": "Tier C original game art",
+    "brief": "VibeTide Live WebMCP platformer level-design workbench",
+    "navigation": "N7 brutal slab",
+    "footer": "Ft8 kinetic status strip",
+    "slopTest": "pass — all applicable gates 1–69",
+    "contrast": "pass — gates 46–50",
+    "mobile": "pass — verified at 390 × 844 in the in-app browser"
+  }
+]

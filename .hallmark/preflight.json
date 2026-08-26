@@ -1,0 +1,8 @@
+{
+  "date": "2026-08-26",
+  "framework": "Vite + TypeScript + Phaser",
+  "fontStack": "Bricolage Grotesque + IBM Plex Sans + Space Mono",
+  "palette": "Hallmark Plume, tokenized in OKLCH",
+  "motion": "CSS-only UI motion with reduced-motion support",
+  "spacing": "4pt semantic scale"
+}

@@ -1,0 +1,85 @@
+/* Hallmark · macrostructure: Workbench · tone: playful · anchor hue: warm coral · genre: playful · theme: Plume · enrichment: Tier C OpenAI ImageGen + post-processed · pre-emit critique: P5 H5 E5 S5 R4 V5 · contrast: pass (46–50) · nav: N7 · footer: Ft8 · slop: pass (51–55) · honest: pass (56) · chrome: pass (57) · tokens: pass (58) · responsive: pass (59) · icons: pass (60) · mobile: pass (36, 59, 61–69) */
+
+:root {
+  color-scheme: light;
+
+  --color-paper: oklch(96% 0.02 70);
+  --color-paper-2: oklch(94% 0.026 70);
+  --color-paper-3: oklch(91% 0.03 70);
+  --color-rule: oklch(82% 0.022 70);
+  --color-rule-2: oklch(70% 0.024 70);
+  --color-muted: oklch(50% 0.022 60);
+  --color-neutral: oklch(36% 0.02 55);
+  --color-ink-2: oklch(30% 0.018 55);
+  --color-ink: oklch(22% 0.015 50);
+  --color-accent: oklch(68% 0.13 18);
+  --color-accent-strong: oklch(57% 0.17 18);
+  --color-accent-ink: oklch(98% 0.012 70);
+  --color-focus: oklch(54% 0.16 18);
+  --color-sea: oklch(70% 0.105 188);
+  --color-sea-deep: oklch(42% 0.09 211);
+  --color-sea-ink: oklch(24% 0.065 211);
+  --color-dune: oklch(77% 0.11 84);
+  --color-dune-dark: oklch(57% 0.105 74);
+  --color-coral: oklch(66% 0.17 30);
+  --color-coral-dark: oklch(48% 0.145 27);
+  --color-violet: oklch(55% 0.11 303);
+  --color-success: oklch(61% 0.12 155);
+  --color-warning: oklch(73% 0.14 77);
+  --color-error: oklch(55% 0.18 26);
+  --color-white: oklch(99% 0.008 70);
+  --color-transparent: oklch(22% 0.015 50 / 0);
+  --color-black-alpha: oklch(8% 0.02 250 / 0.74);
+  --color-ink-alpha: oklch(22% 0.015 50 / 0.12);
+  --color-paper-alpha: oklch(96% 0.02 70 / 0.88);
+  --color-focus-alpha: oklch(68% 0.13 18 / 0.24);
+  --color-stage-overlay: oklch(8% 0.02 250 / 0.42);
+
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-label: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, monospace;
+
+  --display-weight: 800;
+  --display-style: normal;
+  --text-display: clamp(2.75rem, 5vw + 0.75rem, 5rem);
+  --text-display-s: clamp(2rem, 3vw + 0.5rem, 3rem);
+  --tracking-display: -0.035em;
+  --tracking-tight: -0.018em;
+  --tracking-label: 0.06em;
+
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.45rem;
+  --text-2xl: 2rem;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 2.5rem;
+  --space-8: 3rem;
+
+  --radius-card: 14px;
+  --radius-pill: 999px;
+  --radius-input: 10px;
+  --radius-tile: 4px;
+  --rule-card: 1px;
+  --shadow-card: 0 10px 28px -12px oklch(45% 0.1 18 / 0.16);
+  --shadow-float: 0 18px 48px -18px oklch(22% 0.06 50 / 0.32);
+  --shadow-inset: inset 0 0 0 1px oklch(100% 0 0 / 0.24);
+
+  --header-height: 4.25rem;
+  --status-height: 2.1rem;
+  --rail-width: 17.5rem;
+  --control-height: 2.75rem;
+  --cell-size: 1.55rem;
+  --canvas-aspect: 16 / 9;
+  --duration-fast: 140ms;
+  --duration-medium: 260ms;
+  --ease-snap: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
