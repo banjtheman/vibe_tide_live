@@ -5,12 +5,11 @@
 VibeTide Live is a colorful 2D platformer and instant level maker. Run, jump, dodge reef creatures, paint your own route, or ask a visiting agent to build one from a plain-English idea. Every change lands in the same playable level—no exports, rebuilds, or chatbot panel required.
 
 [![Play VibeTide Live](https://img.shields.io/badge/Play-VibeTide%20Live-22B8A7?style=for-the-badge)](https://vibetide-live.banjtheman.chatgpt.site)
+[![Watch the demo](https://img.shields.io/badge/Watch-2%3A32%20demo-FF0033?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/W2LjruRuGGU)
 [![CI](https://github.com/banjtheman/vibe_tide_live/actions/workflows/ci.yml/badge.svg)](https://github.com/banjtheman/vibe_tide_live/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/Code-MIT-58416C.svg)](LICENSE)
 
-The repository also includes the complete, reproducible source for the 2:16
-[WebMCP Challenge competition video](video/README.md), including genuine app
-captures, timed narration, captions, audio mastering, and upload materials.
+The [2:32 demo](https://youtu.be/W2LjruRuGGU) shows Codex reshape a live level through WebMCP, a player edit and complete that same course, and the finished level open from a share link.
 
 ## Play now
 
@@ -108,9 +107,8 @@ The ten backdrops, character, animation atlas, and social artwork were created f
 
 Source code is available under the [MIT License](LICENSE). Original and generated art assets have separate terms in [ASSET_LICENSE.md](ASSET_LICENSE.md).
 
-## Project notes
+## Documentation
 
-- [Hackathon strategy and demo script](docs/HACKATHON.md)
 - [WebMCP implementation notes](docs/WEBMCP.md)
 - [Art direction and provenance](docs/ART.md)
 

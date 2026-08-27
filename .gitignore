@@ -13,13 +13,9 @@ coverage/
 *.log
 test-results/
 playwright-report/
-video/node_modules/
-video/out/
-video/.remotion/
-video/build/
-video/public/captures/*-contact.jpg
-video/public/captures/*-final.png
-video/public/captures/*-failed.png
-video/public/captures/.*-take/
-video/public/captures/smoke.png
-video/public/screens/
+
+# Local competition submission workspace
+/DEVPOST_DESCRIPTION.md
+/docs/HACKATHON.md
+/vids/
+/video/
