@@ -108,6 +108,12 @@ export interface LevelDocument {
   updatedAt: string;
 }
 
+export function levelVersionKey(
+  level: Pick<LevelDocument, "id" | "revision">,
+): string {
+  return JSON.stringify([level.id, level.revision]);
+}
+
 export type StudioMode = "edit" | "play";
 
 export interface GridPoint {

@@ -2,6 +2,7 @@ import {
   TILE_DEFINITIONS,
   TILE_IDS,
   LEVEL_SIZE_LIMITS,
+  levelVersionKey,
   type LevelDocument,
   type StudioSnapshot,
   type StudioStore,
@@ -216,7 +217,7 @@ export function mountStudioUI(
           <section class="rail__section">
             <p class="eyebrow">New route</p>
             <h2 class="section-title">Mix it up</h2>
-            <p class="section-copy">Create a fresh route from the settings above.</p>
+            <p class="section-copy">Keep your settings, then roll a new route, hazards, and enemy mix.</p>
             <button class="button button--sea button--wide section-action" type="button" data-action="fresh">Surprise me</button>
           </section>
         </aside>
@@ -358,7 +359,7 @@ export function mountStudioUI(
   const shareCopyButton = requireElement<HTMLButtonElement>(root, '[data-action="copy-share"]');
 
   let game: VibeTideGameController | null = null;
-  let renderedRevision = -1;
+  let renderedLevelVersion = "";
   let unsubscribe: (() => void) | null = null;
   let toastSequence = 0;
   let selectedBrush: TileId = 1;
@@ -446,9 +447,10 @@ export function mountStudioUI(
 
   const render = (snapshot: StudioSnapshot): void => {
     const { level, validation } = snapshot;
-    if (renderedRevision !== level.revision) {
+    const nextLevelVersion = levelVersionKey(level);
+    if (renderedLevelVersion !== nextLevelVersion) {
       editor.render(level);
-      renderedRevision = level.revision;
+      renderedLevelVersion = nextLevelVersion;
     }
 
     stage.dataset.mode = snapshot.mode;
@@ -588,12 +590,14 @@ export function mountStudioUI(
     });
   });
 
+  let surpriseSeed = Date.now() >>> 0;
   requireElement<HTMLButtonElement>(root, '[data-action="fresh"]').addEventListener("click", () => {
     const currentLevel = store.getSnapshot().level;
     const current = currentLevel.metadata;
     const requestedWidth = widthInput.validity.valid ? Number(widthInput.value) : currentLevel.width;
     const requestedHeight = heightInput.validity.valid ? Number(heightInput.value) : currentLevel.height;
-    store.createLevel(
+    surpriseSeed = (surpriseSeed + 0x9e3779b9) >>> 0;
+    const result = store.createLevel(
       {
         name: nameInput.value.trim() || current.name,
         description: descriptionInput.value.trim() || current.description,
@@ -602,10 +606,11 @@ export function mountStudioUI(
         background: store.getSnapshot().level.metadata.background,
         width: requestedWidth,
         height: requestedHeight,
-        seed: Date.now() >>> 0,
+        seed: surpriseSeed,
       },
       "human",
     );
+    showToast(result.ok ? "Fresh route rolled — new hazards and enemies. Undo is available." : result.summary);
   });
 
   requireElement<HTMLButtonElement>(root, '[data-action="copy-prompt"]').addEventListener("click", () => {

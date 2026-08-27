@@ -64,11 +64,21 @@ function makeRandom(seed: number): () => number {
   };
 }
 
+function shuffled<T>(values: readonly T[], random: () => number): T[] {
+  const result = [...values];
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [result[index], result[swapIndex]] = [result[swapIndex]!, result[index]!];
+  }
+  return result;
+}
+
 function placeEnemyMarkers(
   tiles: TileId[][],
   width: number,
   height: number,
   difficulty: Difficulty,
+  random: () => number,
 ): void {
   const desiredCount = difficulty === "beginner" ? 3 : difficulty === "moderate" ? 5 : 7;
   const candidates: Array<{ x: number; y: number }> = [];
@@ -94,27 +104,34 @@ function placeEnemyMarkers(
   const selected: Array<{ x: number; y: number }> = [];
   const count = Math.min(desiredCount, candidates.length);
   for (let index = 0; index < count; index += 1) {
-    const targetX = Math.round(((index + 1) * (width - 1)) / (count + 1));
-    const available = candidates
-      .filter(
-        (candidate) =>
-          !selected.some((placed) => placed.x === candidate.x) &&
-          !selected.some((placed) => Math.abs(placed.x - candidate.x) < 3),
-      )
-      .sort((left, right) => Math.abs(left.x - targetX) - Math.abs(right.x - targetX) || left.x - right.x);
-    const candidate = available[0] ?? candidates.find(
-      (option) => !selected.some((placed) => placed.x === option.x),
+    const bandStart = Math.floor((index * candidates.length) / count);
+    const bandEnd = Math.max(bandStart + 1, Math.floor(((index + 1) * candidates.length) / count));
+    const band = candidates.slice(bandStart, bandEnd);
+    const isAvailable = (candidate: { x: number }): boolean =>
+      !selected.some((placed) => Math.abs(placed.x - candidate.x) < 3);
+    const spacedBand = band.filter(isAvailable);
+    const spacedAnywhere = candidates.filter(isAvailable);
+    const unselected = candidates.filter(
+      (candidate) => !selected.some((placed) => placed.x === candidate.x),
     );
+    const available = spacedBand.length > 0
+      ? spacedBand
+      : spacedAnywhere.length > 0
+        ? spacedAnywhere
+        : unselected;
+    const candidate = available[Math.floor(random() * available.length)];
     if (candidate) {
       selected.push(candidate);
     }
   }
   selected.sort((left, right) => left.x - right.x);
 
-  const markerSequence = [8, 9, 10] as const;
+  const markerSequence = shuffled([8, 9, 10] as const, random);
   for (let index = 0; index < selected.length; index += 1) {
     const anchor = selected[index]!;
-    const marker = markerSequence[index % markerSequence.length]!;
+    const marker = index < markerSequence.length
+      ? markerSequence[index]!
+      : markerSequence[Math.floor(random() * markerSequence.length)]!;
     let markerY = anchor.y;
     if (marker === 9) {
       if (anchor.y >= 2 && tiles[anchor.y - 2]?.[anchor.x] === 0) {
@@ -283,6 +300,7 @@ export function generateLevel(blueprint: LevelBlueprint, options: GenerateLevelO
   let x = featureStart;
   let sectionIndex = 0;
   let sectionOffset = 0;
+  let sectionVariant = 0;
 
   while (x <= featureEnd) {
     const section = normalized.sections[sectionIndex];
@@ -291,18 +309,33 @@ export function generateLevel(blueprint: LevelBlueprint, options: GenerateLevelO
       x += 1;
       continue;
     }
+    if (sectionOffset === 0) {
+      sectionVariant = Math.floor(random() * 31);
+    }
     const intensity = section.intensity ?? (normalized.difficulty === "tricky" ? 3 : normalized.difficulty === "moderate" ? 2 : 1);
 
     switch (section.kind) {
-      case "run":
+      case "run": {
+        const variationPeriod = 4 + (sectionVariant % 3);
+        if (sectionOffset > 0 && (sectionOffset + sectionVariant) % variationPeriod === 0) {
+          const direction = (sectionVariant & 4) === 0 ? -1 : 1;
+          walkY = Math.min(maximumWalkY, Math.max(minimumWalkY, walkY + direction));
+        }
         setSurface(x, walkY, random() < 0.16 ? 2 : 1);
         break;
-      case "ice":
+      }
+      case "ice": {
+        const variationPeriod = 4 + (sectionVariant % 3);
+        if (sectionOffset > 0 && (sectionOffset + sectionVariant) % variationPeriod === 0) {
+          const direction = (sectionVariant & 4) === 0 ? -1 : 1;
+          walkY = Math.min(maximumWalkY, Math.max(minimumWalkY, walkY + direction));
+        }
         setSurface(x, walkY, 4);
         break;
+      }
       case "gap": {
         const gapWidth = Math.min(3, intensity);
-        const phase = sectionOffset % (gapWidth + 2);
+        const phase = (sectionOffset + sectionVariant) % (gapWidth + 2);
         if (phase === 0 || phase > gapWidth) {
           setSurface(x, walkY, 2);
         }
@@ -311,14 +344,14 @@ export function generateLevel(blueprint: LevelBlueprint, options: GenerateLevelO
       case "spikes": {
         setSurface(x, walkY, 2);
         const spacing = intensity === 1 ? 5 : intensity === 2 ? 4 : 3;
-        if (sectionOffset % spacing === spacing - 2) {
+        if ((sectionOffset + sectionVariant) % spacing === spacing - 2) {
           setHazardColumn(x, walkY, 6);
         }
         break;
       }
       case "water": {
         const waterWidth = Math.min(3, intensity);
-        const phase = sectionOffset % (waterWidth + 2);
+        const phase = (sectionOffset + sectionVariant) % (waterWidth + 2);
         if (phase === 0 || phase > waterWidth) {
           setSurface(x, walkY, 2);
         } else {
@@ -328,9 +361,10 @@ export function generateLevel(blueprint: LevelBlueprint, options: GenerateLevelO
       }
       case "stairs": {
         const stepSpan = intensity === 3 ? 1 : 2;
-        if (sectionOffset > 0 && sectionOffset % stepSpan === 0) {
-          const waveLength = Math.max(2, intensity + 1);
-          const rising = Math.floor(sectionOffset / (stepSpan * waveLength)) % 2 === 0;
+        const waveLength = Math.max(2, intensity + 1);
+        const shiftedOffset = sectionOffset + (sectionVariant % (stepSpan * waveLength * 2));
+        if (sectionOffset > 0 && shiftedOffset % stepSpan === 0) {
+          const rising = Math.floor(shiftedOffset / (stepSpan * waveLength)) % 2 === 0;
           walkY = Math.min(maximumWalkY, Math.max(minimumWalkY, walkY + (rising ? -1 : 1)));
         }
         setSurface(x, walkY, 2);
@@ -355,7 +389,6 @@ export function generateLevel(blueprint: LevelBlueprint, options: GenerateLevelO
   setSurface(goalX, walkY, 1);
   setSurface(normalized.width - 1, walkY, 1);
   tiles[walkY]![goalX] = 3;
-  placeEnemyMarkers(tiles, normalized.width, normalized.height, normalized.difficulty);
 
   const timestamp = options.now ?? DETERMINISTIC_TIMESTAMP;
   const generated: LevelDocument = {
@@ -378,5 +411,7 @@ export function generateLevel(blueprint: LevelBlueprint, options: GenerateLevelO
   };
 
   const validation = validateLevel(generated);
-  return validation.valid ? generated : repairLevel(generated, { now: timestamp }).level;
+  const playable = validation.valid ? generated : repairLevel(generated, { now: timestamp }).level;
+  placeEnemyMarkers(playable.tiles, playable.width, playable.height, normalized.difficulty, random);
+  return playable;
 }

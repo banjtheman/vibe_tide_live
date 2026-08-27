@@ -484,8 +484,8 @@ export class LevelStore implements StudioStore {
   createLevel(blueprint: LevelBlueprint, source: "human" | "agent" = "human"): MutationResult {
     const timestamp = this.now();
     const next = generateLevel(blueprint, { now: timestamp, author: source });
+    this.rememberCurrentLevel();
     this.level = next;
-    this.history = [];
     this.mode = "edit";
     this.activePlaytest = null;
     this.lastPlaytest = null;
@@ -902,7 +902,7 @@ export class LevelStore implements StudioStore {
     if (!previous) {
       return this.noChange("Nothing to undo.", false);
     }
-    const revision = this.level.revision + 1;
+    const revision = Math.max(this.level.revision, previous.revision) + 1;
     this.level = {
       ...cloneLevel(previous),
       revision,
@@ -939,10 +939,7 @@ export class LevelStore implements StudioStore {
     action: string,
     detail: string,
   ): void {
-    this.history.push(cloneLevel(this.level));
-    if (this.history.length > this.historyLimit) {
-      this.history.splice(0, this.history.length - this.historyLimit);
-    }
+    this.rememberCurrentLevel();
     this.level = {
       ...next,
       revision: this.level.revision + 1,
@@ -952,6 +949,13 @@ export class LevelStore implements StudioStore {
     this.validation = validateLevel(this.level);
     this.addActivity(source, action, detail);
     this.publish();
+  }
+
+  private rememberCurrentLevel(): void {
+    this.history.push(cloneLevel(this.level));
+    if (this.history.length > this.historyLimit) {
+      this.history.splice(0, this.history.length - this.historyLimit);
+    }
   }
 
   private validateOperation(operation: LevelPatchOperation): string | null {

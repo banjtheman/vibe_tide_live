@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 
-import type { StudioStore } from "../core/contracts";
+import { levelVersionKey, type StudioStore } from "../core/contracts";
 import { VIBE_TIDE_SCENE_KEY, VibeTideScene } from "./VibeTideScene";
 import { SharedControlState } from "./input";
 import type { VibeTideControl, VibeTideControlState } from "./input";
@@ -97,11 +97,11 @@ export function mountVibeTideGame(
   };
 
   const unsubscribe = store.subscribe((snapshot) => {
-    const revisionChanged = snapshot.level.revision !== observedSnapshot.level.revision;
+    const levelChanged = levelVersionKey(snapshot.level) !== levelVersionKey(observedSnapshot.level);
     const modeChanged = snapshot.mode !== observedSnapshot.mode;
     observedSnapshot = snapshot;
 
-    if (revisionChanged || modeChanged) {
+    if (levelChanged || modeChanged) {
       restartScene();
     }
   });

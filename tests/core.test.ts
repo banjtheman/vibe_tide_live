@@ -13,6 +13,7 @@ import {
   decodeLevel,
   encodeLevel,
   generateLevel,
+  levelVersionKey,
   repairLevel,
   tryDecodeLevel,
   validateLevel,
@@ -90,6 +91,26 @@ const richBlueprint: LevelBlueprint = {
   ],
 };
 
+function enemyFingerprint(level: LevelDocument): string {
+  return level.tiles
+    .flatMap((row, y) => row.map((tile, x) => ({ tile, x, y })))
+    .filter(({ tile }) => tile === 8 || tile === 9 || tile === 10)
+    .map(({ tile, x, y }) => `${tile}@${x},${y}`)
+    .join("|");
+}
+
+function routeFingerprint(level: LevelDocument): string {
+  return Array.from({ length: level.width }, (_, x) => {
+    for (let y = 0; y < level.height; y += 1) {
+      const tile = level.tiles[y]?.[x] ?? 0;
+      if (tile === 0 || tile === 8 || tile === 9 || tile === 10) continue;
+      if (tile === 1 || tile === 2 || tile === 4) return `safe@${y}`;
+      return `${tile}@${y}`;
+    }
+    return "open";
+  }).join("|");
+}
+
 describe("deterministic level generator", () => {
   it("produces byte-for-byte stable documents from the same blueprint", () => {
     const first = generateLevel(richBlueprint);
@@ -162,6 +183,68 @@ describe("deterministic level generator", () => {
     expect(second.tiles).not.toEqual(first.tiles);
     expect(validateLevel(first).valid).toBe(true);
     expect(validateLevel(second).valid).toBe(true);
+  });
+
+  it("uses seed changes to vary route topology and enemy encounters", () => {
+    const levels = Array.from({ length: 12 }, (_, index) =>
+      generateLevel({
+        name: "Reroll",
+        width: 48,
+        height: 18,
+        difficulty: "moderate",
+        primaryMechanic: "mixed",
+        seed: index + 1,
+      }),
+    );
+
+    expect(new Set(levels.map(routeFingerprint)).size).toBeGreaterThan(3);
+    expect(new Set(levels.map(enemyFingerprint)).size).toBeGreaterThan(6);
+    expect(levels.every((level) => validateLevel(level).valid)).toBe(true);
+    expect(levels.every((level) => enemyFingerprint(level).split("|").length === 5)).toBe(true);
+    expect(
+      levels.every(
+        (level) =>
+          new Set(level.tiles.flat().filter((tile) => tile === 8 || tile === 9 || tile === 10)).size === 3,
+      ),
+    ).toBe(true);
+  });
+
+  it("keeps repaired tricky routes populated and varies short focused courses", () => {
+    for (const seed of [23, 30]) {
+      const level = generateLevel({
+        name: "Repaired encounters",
+        width: 48,
+        height: 18,
+        difficulty: "tricky",
+        primaryMechanic: "mixed",
+        seed,
+      });
+      expect(validateLevel(level).valid).toBe(true);
+      expect(enemyFingerprint(level).split("|")).toHaveLength(7);
+    }
+
+    const shortIceRoutes = Array.from({ length: 12 }, (_, index) =>
+      generateLevel({
+        name: "Short glass",
+        width: 20,
+        height: 10,
+        difficulty: "moderate",
+        primaryMechanic: "ice",
+        seed: index + 1,
+      }),
+    );
+    expect(new Set(shortIceRoutes.map(routeFingerprint)).size).toBeGreaterThan(3);
+    expect(shortIceRoutes.every((level) => validateLevel(level).valid)).toBe(true);
+  });
+
+  it("distinguishes generated replacements that share revision one", () => {
+    const first = generateLevel({ name: "Reroll", seed: 101 });
+    const second = generateLevel({ name: "Reroll", seed: 202 });
+
+    expect(first.revision).toBe(1);
+    expect(second.revision).toBe(1);
+    expect(first.id).not.toBe(second.id);
+    expect(levelVersionKey(first)).not.toBe(levelVersionKey(second));
   });
 });
 
@@ -522,9 +605,10 @@ describe("LevelStore transactions, history, and persistence", () => {
     expect(store.setMetadata({ name: "Recovered" }).ok).toBe(true);
   });
 
-  it("creates normalized playable levels and clears project history", () => {
+  it("creates normalized playable levels and lets the previous route be restored", () => {
     const store = new LevelStore({ storage: null, now: tickingClock() });
     store.setMetadata({ name: "Old work" });
+    const before = store.exportProject();
     const created = store.createLevel({
       name: "Agent beach",
       width: 200,
@@ -536,8 +620,13 @@ describe("LevelStore transactions, history, and persistence", () => {
     expect(created.validation.valid).toBe(true);
     expect(store.getSnapshot().level.width).toBe(80);
     expect(store.getSnapshot().level.height).toBe(10);
-    expect(store.getSnapshot().canUndo).toBe(false);
+    expect(store.getSnapshot().canUndo).toBe(true);
     expect(store.getSnapshot().level.metadata.author).toBe("agent");
+    expect(store.undo().ok).toBe(true);
+    expect(store.getSnapshot().level.id).toBe(before.id);
+    expect(store.getSnapshot().level.tiles).toEqual(before.tiles);
+    expect(store.getSnapshot().level.metadata.name).toBe("Old work");
+    expect(store.getSnapshot().level.revision).toBeGreaterThan(before.revision);
   });
 });
 

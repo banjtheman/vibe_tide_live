@@ -798,10 +798,10 @@ h2 {
   background:
     linear-gradient(
       145deg,
-      oklch(91% 0.052 194 / 0.7) 0 35%,
-      oklch(85% 0.072 205 / 0.64) 36% 100%
+      oklch(91% 0.052 194 / 0.18) 0 35%,
+      oklch(85% 0.072 205 / 0.12) 36% 100%
     );
-  border-color: oklch(48% 0.07 210 / 0.76);
+  border-color: oklch(48% 0.07 210 / 0.62);
 }
 
 .tile-swatch.tile--0::after {
@@ -1121,7 +1121,7 @@ h2 {
 .editor-viewport {
   overflow: auto;
   padding: clamp(var(--space-6), 7vh, var(--space-8)) var(--space-4) var(--space-4);
-  background: oklch(26% 0.06 215 / 0.38);
+  background: oklch(26% 0.06 215 / 0.18);
   scrollbar-color: var(--color-sea) var(--color-sea-ink);
   scrollbar-width: thin;
 }
@@ -1154,7 +1154,7 @@ h2 {
   min-height: 100%;
   align-content: end;
   justify-content: center;
-  background: var(--color-grid-line);
+  background: transparent;
   border: 3px solid var(--color-grid-line);
   box-shadow: 0 12px 30px var(--color-black-alpha);
   touch-action: none;
