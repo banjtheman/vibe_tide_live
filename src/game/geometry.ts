@@ -52,6 +52,25 @@ export function findPlayerSpawnCell(level: LevelDocument): GridPoint | null {
   return findStandableCellFromColumn(level, 1) ?? findLeftmostStandableCell(level);
 }
 
+/**
+ * Treats the leftmost finish buoy as a full-height finish line. The buoy stays
+ * the visual marker, while a player who jumps above it still clears the run.
+ */
+export function findFinishLineX(
+  level: LevelDocument,
+  tileSize = DEFAULT_TILE_SIZE,
+): number | null {
+  for (let x = 0; x < level.width; x += 1) {
+    for (let y = 0; y < level.height; y += 1) {
+      if (tileAt(level, x, y) === 3) {
+        return (x + 0.5) * tileSize;
+      }
+    }
+  }
+
+  return null;
+}
+
 function findStandableCellFromColumn(
   level: LevelDocument,
   startingColumn: number,

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { LevelDocument, TileId } from "../src/core/contracts";
 import {
   cellCenter,
+  findFinishLineX,
   findLeftmostStandableCell,
   findPlayerSpawnCell,
   isHazardTile,
@@ -101,6 +102,11 @@ describe("grid geometry", () => {
   it("converts cells and level dimensions into pixels", () => {
     expect(cellCenter({ x: 2, y: 1 }, 40)).toEqual({ x: 100, y: 60 });
     expect(levelPixelBounds(document, 40)).toEqual({ width: 120, height: 80 });
+  });
+
+  it("turns the finish buoy column into a full-height finish line", () => {
+    expect(findFinishLineX(document, 40)).toBe(60);
+    expect(findFinishLineX(level([[0, 0], [1, 1]]), 40)).toBeNull();
   });
 
   it("maps world coordinates to clamped telemetry cells", () => {

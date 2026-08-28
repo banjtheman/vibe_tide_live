@@ -5,6 +5,7 @@ import type { GridPoint, LevelDocument, StudioSnapshot, TileId } from "../core/c
 import {
   DEFAULT_TILE_SIZE,
   cellCenter,
+  findFinishLineX,
   findPlayerSpawnCell,
   isSolidTile,
   levelPixelBounds,
@@ -84,6 +85,7 @@ export class VibeTideScene extends Phaser.Scene {
   private readonly projectileExpirations = new Map<Phaser.Physics.Arcade.Sprite, number>();
   private backdrop: Phaser.GameObjects.Image | null = null;
   private spawnCell: GridPoint = { x: 0, y: 0 };
+  private finishLineX: number | null = null;
   private isPlayMode = false;
   private isRespawning = false;
   private isComplete = false;
@@ -116,6 +118,7 @@ export class VibeTideScene extends Phaser.Scene {
     this.lastGroundedAt = Number.NEGATIVE_INFINITY;
     this.jumpBufferedAt = Number.NEGATIVE_INFINITY;
     this.lastTouchJumpSequence = this.sharedControls.jumpSequence;
+    this.finishLineX = findFinishLineX(snapshot.level);
 
     ensureProceduralTextures(this);
     this.createBackdrop(snapshot.level.metadata.background);
@@ -185,6 +188,11 @@ export class VibeTideScene extends Phaser.Scene {
     }
 
     this.updatePlayerAnimation(grounded, horizontalInput, body.velocity.y);
+
+    if (this.finishLineX !== null && body.right >= this.finishLineX) {
+      this.completeLevel();
+      return;
+    }
 
     const bounds = levelPixelBounds(this.level ?? { width: 1, height: 1 });
     if (
@@ -978,27 +986,38 @@ export class VibeTideScene extends Phaser.Scene {
   }
 
   private handleResize(gameSize: Phaser.Structs.Size): void {
+    const camera = this.cameras.main;
+    const previousScroll = { x: camera.scrollX, y: camera.scrollY };
+    const previousZoom = camera.zoom;
+    const profile = cameraFollowProfile(gameSize.width, gameSize.height);
+    const zoomChanged = Math.abs(previousZoom - profile.zoom) > 0.001;
+
     if (this.backdrop !== null) {
       const sourceWidth = Math.max(1, this.backdrop.width);
       const sourceHeight = Math.max(1, this.backdrop.height);
       const coverScale = Math.max(gameSize.width / sourceWidth, gameSize.height / sourceHeight);
       this.backdrop
         .setPosition(gameSize.width / 2, gameSize.height / 2)
-        .setScale(coverScale);
+        .setScale(coverScale / profile.zoom);
     }
 
-    const camera = this.cameras.main;
-    const previousScroll = { x: camera.scrollX, y: camera.scrollY };
-    const profile = cameraFollowProfile(gameSize.width, gameSize.height);
     this.calmPortraitCamera = profile.calmPortrait;
     camera
+      .setZoom(profile.zoom)
       .setLerp(profile.lerpX, profile.lerpY)
-      .setDeadzone(profile.deadzoneWidth, profile.deadzoneHeight);
+      .setDeadzone(
+        profile.deadzoneWidth / profile.zoom,
+        profile.deadzoneHeight / profile.zoom,
+      );
 
     // Phaser recenters a following camera when its deadzone changes. Preserve
     // the current view across mobile browser-chrome and orientation resizes.
     if (this.isPlayMode && this.player !== null) {
-      camera.setScroll(previousScroll.x, previousScroll.y);
+      if (zoomChanged) {
+        camera.centerOn(this.player.x, this.player.y);
+      } else {
+        camera.setScroll(previousScroll.x, previousScroll.y);
+      }
     }
   }
 
@@ -1017,5 +1036,6 @@ export class VibeTideScene extends Phaser.Scene {
     this.enemyStates.clear();
     this.projectileExpirations.clear();
     this.backdrop = null;
+    this.finishLineX = null;
   }
 }

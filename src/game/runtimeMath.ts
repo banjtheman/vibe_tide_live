@@ -5,6 +5,7 @@ export interface Point2D {
 
 export interface CameraFollowProfile {
   calmPortrait: boolean;
+  zoom: number;
   deadzoneWidth: number;
   deadzoneHeight: number;
   lerpX: number;
@@ -23,6 +24,7 @@ export function cameraFollowProfile(width: number, height: number): CameraFollow
   if (calmPortrait) {
     return {
       calmPortrait: true,
+      zoom: 0.8,
       deadzoneWidth: Math.max(
         1,
         Math.round(Math.min(safeWidth - 96, Math.max(144, safeWidth * 0.5))),
@@ -38,6 +40,7 @@ export function cameraFollowProfile(width: number, height: number): CameraFollow
 
   return {
     calmPortrait: false,
+    zoom: 1,
     deadzoneWidth: Math.max(110, safeWidth * 0.26),
     deadzoneHeight: Math.max(80, safeHeight * 0.2),
     lerpX: 0.13,

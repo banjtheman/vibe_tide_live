@@ -62,19 +62,20 @@ function formatDuration(milliseconds: number): string {
   return `${seconds}s`;
 }
 
-function makePaletteMarkup(): string {
+function makePaletteMarkup(scope = "desktop"): string {
   return TILE_IDS.map(
     (tile) => {
       const definition = TILE_DEFINITIONS[tile];
+      const descriptionId = `tile-description-${scope}-${tile}`;
       return `
-      <button class="palette__item" type="button" data-brush="${tile}" aria-pressed="${tile === 1 ? "true" : "false"}" aria-describedby="tile-description-${tile}" title="${definition.description}">
+      <button class="palette__item" type="button" data-brush="${tile}" aria-pressed="${tile === 1 ? "true" : "false"}" aria-describedby="${descriptionId}" title="${definition.description}">
         <span class="tile-swatch tile--${tile}" aria-hidden="true"></span>
         <span class="palette__copy">
           <span class="palette__label">${definition.name}</span>
           <span class="palette__kind" aria-hidden="true">${definition.category}</span>
         </span>
         <span class="palette__selected" aria-hidden="true">✓</span>
-        <span class="sr-only" id="tile-description-${tile}">${definition.description}</span>
+        <span class="sr-only" id="${descriptionId}">${definition.description}</span>
       </button>`;
     },
   ).join("");
@@ -206,12 +207,12 @@ export function mountStudioUI(
             </fieldset>
           </section>
 
-          <section class="rail__section">
+          <section class="rail__section rail__section--palette">
             <p class="eyebrow">Build pieces</p>
             <h2 class="section-title" id="piece-picker-title">Pick, then paint</h2>
             <p class="section-copy palette-intro">Choose a piece to see what it does, then drag it across the level.</p>
             ${makePieceGuideMarkup(1)}
-            <div class="palette" role="group" aria-labelledby="piece-picker-title">${makePaletteMarkup()}</div>
+            <div class="palette" role="group" aria-labelledby="piece-picker-title">${makePaletteMarkup("desktop")}</div>
           </section>
 
           <section class="rail__section">
@@ -222,7 +223,7 @@ export function mountStudioUI(
           </section>
         </aside>
 
-        <section class="stage-shell" aria-label="VibeTide level">
+        <section class="stage-shell" data-stage-shell data-mode="edit" aria-label="VibeTide level">
           <div class="stage-toolbar">
             <div class="stage-title">
               <h1 data-level-name>First light</h1>
@@ -233,6 +234,19 @@ export function mountStudioUI(
               <button type="button" data-mode="play" aria-pressed="false">Play</button>
             </div>
           </div>
+
+          <section class="mobile-build-tools" data-mobile-build-tools aria-labelledby="mobile-piece-picker-title">
+            <div class="mobile-build-tools__heading">
+              <p class="eyebrow" id="mobile-piece-picker-title">Build pieces</p>
+              <span class="mobile-build-tools__swipe" aria-hidden="true">Swipe tools →</span>
+            </div>
+            <div class="palette palette--mobile" role="group" aria-labelledby="mobile-piece-picker-title">${makePaletteMarkup("mobile")}</div>
+            <p class="mobile-piece-guide" aria-live="polite">
+              <strong data-piece-name>${TILE_DEFINITIONS[1].name}</strong>
+              <span data-piece-kind>${TILE_DEFINITIONS[1].category}</span>
+              <span data-piece-description>${TILE_DEFINITIONS[1].description}</span>
+            </p>
+          </section>
 
           <div class="stage" data-stage data-mode="edit">
             <p class="stage-hint" data-stage-hint>Choose a piece, then drag to paint</p>
@@ -319,6 +333,8 @@ export function mountStudioUI(
   const gameMount = requireElement<HTMLElement>(root, "[data-game-mount]");
   const editor = mountLevelEditor(editorMount, store);
   const stage = requireElement<HTMLElement>(root, "[data-stage]");
+  const stageShell = requireElement<HTMLElement>(root, "[data-stage-shell]");
+  const mobileBuildTools = requireElement<HTMLElement>(root, "[data-mobile-build-tools]");
   const stageHint = requireElement<HTMLElement>(root, "[data-stage-hint]");
   const stageStatus = requireElement<HTMLElement>(root, "[data-stage-status]");
   const levelName = requireElement<HTMLElement>(root, "[data-level-name]");
@@ -345,10 +361,10 @@ export function mountStudioUI(
   const backgroundButtons = [...root.querySelectorAll<HTMLButtonElement>("[data-background]")];
   const modeButtons = [...root.querySelectorAll<HTMLButtonElement>("[data-mode]")];
   const paletteButtons = [...root.querySelectorAll<HTMLButtonElement>("[data-brush]")];
-  const pieceSwatch = requireElement<HTMLElement>(root, "[data-piece-swatch]");
-  const pieceName = requireElement<HTMLElement>(root, "[data-piece-name]");
-  const pieceKind = requireElement<HTMLElement>(root, "[data-piece-kind]");
-  const pieceDescription = requireElement<HTMLElement>(root, "[data-piece-description]");
+  const pieceSwatches = [...root.querySelectorAll<HTMLElement>("[data-piece-swatch]")];
+  const pieceNames = [...root.querySelectorAll<HTMLElement>("[data-piece-name]")];
+  const pieceKinds = [...root.querySelectorAll<HTMLElement>("[data-piece-kind]")];
+  const pieceDescriptions = [...root.querySelectorAll<HTMLElement>("[data-piece-description]")];
   const playButtons = [...root.querySelectorAll<HTMLButtonElement>('[data-action="play"], [data-mode="play"]')];
   const topPlayButton = requireElement<HTMLButtonElement>(root, '[data-action="play"]');
   const undoButton = requireElement<HTMLButtonElement>(root, '[data-action="undo"]');
@@ -366,10 +382,18 @@ export function mountStudioUI(
 
   const showPieceGuide = (tile: TileId): void => {
     const definition = TILE_DEFINITIONS[tile];
-    pieceSwatch.className = `tile-swatch piece-guide__swatch tile--${tile}`;
-    pieceName.textContent = definition.name;
-    pieceKind.textContent = definition.category;
-    pieceDescription.textContent = definition.description;
+    pieceSwatches.forEach((swatch) => {
+      swatch.className = `tile-swatch piece-guide__swatch tile--${tile}`;
+    });
+    pieceNames.forEach((name) => {
+      name.textContent = definition.name;
+    });
+    pieceKinds.forEach((kind) => {
+      kind.textContent = definition.category;
+    });
+    pieceDescriptions.forEach((description) => {
+      description.textContent = definition.description;
+    });
   };
 
   const showToast = (message: string): void => {
@@ -454,6 +478,8 @@ export function mountStudioUI(
     }
 
     stage.dataset.mode = snapshot.mode;
+    stageShell.dataset.mode = snapshot.mode;
+    mobileBuildTools.hidden = snapshot.mode !== "edit";
     const background = backgroundDefinition(level.metadata.background);
     stage.dataset.background = background.id;
     stage.style.backgroundImage = `url("${background.assetPath}")`;
@@ -538,7 +564,9 @@ export function mountStudioUI(
       selectedBrush = tile;
       editor.setBrush(tile);
       showPieceGuide(tile);
-      paletteButtons.forEach((candidate) => candidate.setAttribute("aria-pressed", String(candidate === button)));
+      paletteButtons.forEach((candidate) => {
+        candidate.setAttribute("aria-pressed", String(candidate.dataset.brush === String(tile)));
+      });
     });
   });
 
