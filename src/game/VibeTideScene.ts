@@ -24,6 +24,7 @@ import {
   aimedProjectileVelocity,
   alignSpriteFeetToSurface,
   cameraFollowProfile,
+  cameraLookDirection,
 } from "./runtimeMath";
 import {
   OPTIONAL_OTTER_KEY,
@@ -97,6 +98,8 @@ export class VibeTideScene extends Phaser.Scene {
   private keyD: Phaser.Input.Keyboard.Key | null = null;
   private keyW: Phaser.Input.Keyboard.Key | null = null;
   private calmPortraitCamera = false;
+  private cameraLookAheadScreenX = 0;
+  private cameraLookAheadLimitScreenX = 0;
 
   constructor(hooks: VibeTideSceneHooks, controls: SharedControlState) {
     super({ key: VIBE_TIDE_SCENE_KEY });
@@ -119,6 +122,9 @@ export class VibeTideScene extends Phaser.Scene {
     this.jumpBufferedAt = Number.NEGATIVE_INFINITY;
     this.lastTouchJumpSequence = this.sharedControls.jumpSequence;
     this.finishLineX = findFinishLineX(snapshot.level);
+    this.calmPortraitCamera = false;
+    this.cameraLookAheadScreenX = 0;
+    this.cameraLookAheadLimitScreenX = 0;
 
     ensureProceduralTextures(this);
     this.createBackdrop(snapshot.level.metadata.background);
@@ -141,7 +147,7 @@ export class VibeTideScene extends Phaser.Scene {
     this.handleResize(this.scale.gameSize);
   }
 
-  update(time: number): void {
+  update(time: number, delta: number): void {
     if (!this.isPlayMode || this.isComplete) {
       return;
     }
@@ -161,6 +167,7 @@ export class VibeTideScene extends Phaser.Scene {
 
     const onIce = grounded && this.isPlayerOnIce(body);
     const horizontalInput = this.readHorizontalInput();
+    this.updateCameraLookAhead(horizontalInput, body.velocity.x, delta);
     const acceleration = onIce ? 760 : grounded ? 2_250 : 1_180;
     const drag = onIce ? 65 : grounded ? 1_850 : 90;
     const maximumSpeed = onIce ? ICE_RUN_SPEED : RUN_SPEED;
@@ -896,6 +903,38 @@ export class VibeTideScene extends Phaser.Scene {
     );
   }
 
+  private updateCameraLookAhead(
+    horizontalInput: number,
+    horizontalVelocity: number,
+    delta: number,
+  ): void {
+    if (!this.calmPortraitCamera || this.cameraLookAheadLimitScreenX <= 0) {
+      return;
+    }
+
+    const direction = cameraLookDirection(horizontalInput, horizontalVelocity);
+    if (direction === 0) {
+      return;
+    }
+
+    const target = direction * this.cameraLookAheadLimitScreenX;
+    const frameDelta = Math.min(80, Math.max(0, delta));
+    const blend = 1 - Math.exp(-frameDelta / 140);
+    this.cameraLookAheadScreenX += (target - this.cameraLookAheadScreenX) * blend;
+    this.cameras.main.setFollowOffset(
+      -this.cameraLookAheadScreenX / this.cameras.main.zoom,
+      0,
+    );
+  }
+
+  private resetCameraLookAhead(centerOnPlayer = false): void {
+    this.cameraLookAheadScreenX = 0;
+    this.cameras.main.setFollowOffset(0, 0);
+    if (centerOnPlayer && this.player !== null) {
+      this.cameras.main.centerOn(this.player.x, this.player.y);
+    }
+  }
+
   private killPlayer(): void {
     if (this.player === null || this.isRespawning || this.isComplete) {
       return;
@@ -923,6 +962,9 @@ export class VibeTideScene extends Phaser.Scene {
       this.player.clearTint();
       this.player.setVelocity(0, 0);
       this.player.setAcceleration(0, 0);
+      if (this.calmPortraitCamera) {
+        this.resetCameraLookAhead(true);
+      }
       if (this.player.texture.key === V1_OTTER_ATLAS_KEY) {
         this.player.play(PLAYER_IDLE_ANIMATION_KEY, true);
       }
@@ -1002,9 +1044,21 @@ export class VibeTideScene extends Phaser.Scene {
     }
 
     this.calmPortraitCamera = profile.calmPortrait;
+    this.cameraLookAheadLimitScreenX = profile.forwardLookAhead;
+    if (!profile.calmPortrait) {
+      this.cameraLookAheadScreenX = 0;
+    } else {
+      this.cameraLookAheadScreenX = Math.max(
+        -profile.forwardLookAhead,
+        Math.min(profile.forwardLookAhead, this.cameraLookAheadScreenX),
+      );
+    }
     camera
       .setZoom(profile.zoom)
       .setLerp(profile.lerpX, profile.lerpY)
+      // Phaser subtracts its follow offset from the target. A negative offset
+      // therefore places the otter left of center and keeps the route ahead in view.
+      .setFollowOffset(-this.cameraLookAheadScreenX / profile.zoom, 0)
       .setDeadzone(
         profile.deadzoneWidth / profile.zoom,
         profile.deadzoneHeight / profile.zoom,

@@ -8,13 +8,14 @@ export interface CameraFollowProfile {
   zoom: number;
   deadzoneWidth: number;
   deadzoneHeight: number;
+  forwardLookAhead: number;
   lerpX: number;
   lerpY: number;
 }
 
 /**
  * Keeps portrait play steady: normal jumps stay inside a tall safe area while
- * horizontal travel is followed with a slower, softer catch-up.
+ * horizontal travel gets enough forward composition to show the next jump.
  */
 export function cameraFollowProfile(width: number, height: number): CameraFollowProfile {
   const safeWidth = Math.max(1, width);
@@ -33,7 +34,10 @@ export function cameraFollowProfile(width: number, height: number): CameraFollow
         1,
         Math.round(Math.min(safeHeight - 96, Math.max(216, safeHeight * 0.68))),
       ),
-      lerpX: 0.1,
+      forwardLookAhead: Math.round(
+        Math.min(96, Math.max(72, safeWidth * 0.22)),
+      ),
+      lerpX: 0.16,
       lerpY: 0.055,
     };
   }
@@ -43,9 +47,31 @@ export function cameraFollowProfile(width: number, height: number): CameraFollow
     zoom: 1,
     deadzoneWidth: Math.max(110, safeWidth * 0.26),
     deadzoneHeight: Math.max(80, safeHeight * 0.2),
+    forwardLookAhead: 0,
     lerpX: 0.13,
     lerpY: 0.17,
   };
+}
+
+/**
+ * Follows the otter's actual travel direction before raw input. This keeps the
+ * camera looking through sea-glass inertia instead of snapping on a quick turn.
+ */
+export function cameraLookDirection(
+  horizontalInput: number,
+  horizontalVelocity: number,
+  minimumVelocity = 24,
+): -1 | 0 | 1 {
+  if (Math.abs(horizontalVelocity) > minimumVelocity) {
+    return horizontalVelocity < 0 ? -1 : 1;
+  }
+  if (horizontalInput < 0) {
+    return -1;
+  }
+  if (horizontalInput > 0) {
+    return 1;
+  }
+  return 0;
 }
 
 /**
