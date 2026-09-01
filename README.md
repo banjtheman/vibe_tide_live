@@ -5,11 +5,11 @@
 VibeTide Live is a colorful 2D platformer and instant level maker. Run, jump, dodge reef creatures, paint your own route, or ask a visiting agent to build one from a plain-English idea. Every change lands in the same playable level—no exports, rebuilds, or chatbot panel required.
 
 [![Play VibeTide Live](https://img.shields.io/badge/Play-VibeTide%20Live-22B8A7?style=for-the-badge)](https://vibetide-live.banjtheman.chatgpt.site)
-[![Watch the demo](https://img.shields.io/badge/Watch-2%3A32%20demo-FF0033?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/W2LjruRuGGU)
+[![Watch the demo](https://img.shields.io/badge/Watch-2%3A05%20demo-FF0033?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=wW5RM5VjAvY)
 [![CI](https://github.com/banjtheman/vibe_tide_live/actions/workflows/ci.yml/badge.svg)](https://github.com/banjtheman/vibe_tide_live/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/Code-MIT-58416C.svg)](LICENSE)
 
-The [2:32 demo](https://youtu.be/W2LjruRuGGU) shows Codex reshape a live level through WebMCP, a player edit and complete that same course, and the finished level open from a share link.
+The [2:05 demo](https://www.youtube.com/watch?v=wW5RM5VjAvY) shows Codex reshape a live level through WebMCP, a player edit and complete that same course, and the finished level open from a share link.
 
 ## Play now
 
